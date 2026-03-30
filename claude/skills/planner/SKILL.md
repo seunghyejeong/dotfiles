@@ -67,20 +67,20 @@ Jumping into code without understanding requirements leads to rework, scope cree
    - **Proceed to review** — send to Architect and Critic for evaluation
    - **Request changes** — return to step 1 with user feedback incorporated
    - **Skip review** — go directly to final approval (step 6)
-3. **Architect** reviews for architectural soundness (prefer `ask_codex` with `architect` role)
-4. **Critic** evaluates against quality criteria (prefer `ask_codex` with `critic` role)
+3. **Architect** agent reviews for architectural soundness
+4. **Critic** agent evaluates against quality criteria
 5. If Critic rejects: iterate with feedback (max 5 iterations)
 6. On Critic approval: **MUST** use `AskUserQuestion` to present the plan with these options:
    - **Approve and execute** — proceed to implementation via deep-executor
    - **Request changes** — return to step 1 with user feedback
    - **Reject** — discard the plan entirely
 7. User chooses via the structured `AskUserQuestion` UI (never ask for approval in plain text)
-8. On user approval: Delegate implementation to `deep-executor` agent (Opus) with the approved plan from `.omc/plans/` as context. Do NOT implement directly in the planning agent.
+8. On user approval: Delegate implementation to `deep-executor` agent (Opus) with the approved plan from `.claude/plan/` as context. Do NOT implement directly in the planning agent.
 
 ### Review Mode (`--review`)
 
-1. Read plan file from `.omc/plans/`
-2. Evaluate via Critic (prefer `ask_codex` with `critic` role)
+1. Read plan file from `.claude/plan/`
+2. Spawn `critic` agent for evaluation
 3. Return verdict: APPROVED, REVISE (with specific feedback), or REJECT (replanning required)
 
 ### Plan Output Format
@@ -92,18 +92,17 @@ Every plan includes:
 - Risks and Mitigations
 - Verification Steps
 
-Plans are saved to `.omc/plans/`. Drafts go to `.omc/drafts/`.
+Plans are saved to `.claude/plan/`. Drafts go to `.claude/drafts/`.
 </Steps>
 
 <Tool_Usage>
-- Before first MCP tool use, call `ToolSearch("mcp")` to discover deferred MCP tools
 - Use `AskUserQuestion` for preference questions (scope, priority, timeline, risk tolerance) -- provides clickable UI
 - Use plain text for questions needing specific values (port numbers, names, follow-up clarifications)
-- Use `explore` agent (Haiku, 30s timeout) to gather codebase facts before asking the user
-- Use `ask_codex` with `agent_role: "planner"` for planning validation on large-scope plans
-- Use `ask_codex` with `agent_role: "analyst"` for requirements analysis
-- Use `ask_codex` with `agent_role: "critic"` for plan review in consensus and review modes
-- If ToolSearch finds no MCP tools or Codex is unavailable, fall back to equivalent Claude agents -- never block on external tools
+- Spawn `explore` agent (Haiku) to gather codebase facts before asking the user
+- Spawn `analyst` agent (Opus) for requirements gap analysis before plan generation
+- Spawn `critic` agent (Opus) for plan review after generation and in consensus/review modes
+- Spawn `architect` agent (Opus) for architectural soundness review in consensus mode
+- Spawn `document-specialist` agent (Sonnet) for external documentation needs
 - In consensus mode, **MUST** use `AskUserQuestion` for the user feedback step (step 2) and the final approval step (step 6) -- never ask for approval in plain text
 - In consensus mode, on user approval delegate to `deep-executor` agent for execution (step 8) -- never implement directly in the planning agent
 </Tool_Usage>
@@ -171,7 +170,7 @@ Why bad: Decision fatigue. Present one option with trade-offs, get reaction, the
 - [ ] Plan references specific files/lines where applicable (80%+ claims)
 - [ ] All risks have mitigations identified
 - [ ] No vague terms without metrics ("fast" -> "p99 < 200ms")
-- [ ] Plan saved to `.omc/plans/`
+- [ ] Plan saved to `.claude/plan/`
 - [ ] In consensus mode: user explicitly approved before any execution
 </Final_Checklist>
 
