@@ -1,5 +1,5 @@
 ---
-name: plan
+name: planner
 description: Strategic planning with optional interview workflow
 ---
 
@@ -219,5 +219,5 @@ Before asking any interview question, classify it:
 
 ## Deprecation Notice
 
-The separate `/planner`, `/ralplan`, and `/review` skills have been merged into `/plan`. All workflows (interview, direct, consensus, review) are available through `/plan`.
+The separate `/ralplan` and `/review` skills have been merged into `/planner`. All workflows (interview, direct, consensus, review) are available through `/planner`.
 </Advanced>
