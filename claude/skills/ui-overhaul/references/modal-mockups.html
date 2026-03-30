@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark" style="color-scheme:dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>컴플라이언스 모달 시안</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050510;
+  --bg-subtle: #0a0b1a;
+  --glass: rgba(255,255,255,0.035);
+  --glass-elevated: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.07);
+  --glass-border-hover: rgba(255,255,255,0.13);
+  --text-1: #eaedf3;
+  --text-2: #7d8799;
+  --text-3: #454d5e;
+  --blue: #3b8fff;
+  --teal: #00d4aa;
+  --amber: #f0a030;
+  --red: #ff4060;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --brand: #ef5d19;
+  --hairline: rgba(255,255,255,0.06);
+  --card-shadow-1: rgba(0,0,0,0.25);
+  --card-shadow-2: rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] {
+  --bg: #f2f3f8;
+  --bg-subtle: #e8e9f0;
+  --glass: rgba(255,255,255,0.75);
+  --glass-elevated: rgba(255,255,255,0.9);
+  --glass-border: rgba(0,0,0,0.07);
+  --glass-border-hover: rgba(0,0,0,0.13);
+  --text-1: #0a0c18;
+  --text-2: #4a5068;
+  --text-3: #8890a4;
+  --blue: #2b7ae8;
+  --teal: #00b894;
+  --amber: #d98d20;
+  --red: #e8304a;
+  --purple: #7c4ddb;
+  --cyan: #0597b5;
+  --brand: #ef5d19;
+  --hairline: rgba(0,0,0,0.06);
+  --card-shadow-1: rgba(0,0,0,0.06);
+  --card-shadow-2: rgba(0,0,0,0.04);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-font-smoothing:antialiased; }
+body {
+  font-family:'IBM Plex Sans',-apple-system,sans-serif;
+  font-size:13px; line-height:1.5; color:var(--text-1);
+  background:var(--bg); min-height:100vh; padding:40px;
+}
+h1,h2,h3 { font-family:'Outfit',sans-serif; text-wrap:balance; }
+
+/* ── Theme Toggle ── */
+.theme-toggle {
+  position:fixed; top:16px; right:16px; z-index:9999;
+  background:var(--glass-elevated); border:1px solid var(--glass-border);
+  color:var(--text-2); padding:6px 14px; border-radius:8px; cursor:pointer;
+  font-size:12px; font-family:'IBM Plex Sans',sans-serif;
+}
+
+/* ── Page Layout ── */
+.page-title { font-size:24px; font-weight:700; margin-bottom:8px; }
+.page-sub { font-size:13px; color:var(--text-2); margin-bottom:32px; }
+
+.mockup-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:24px;
+  max-width:1200px; margin:0 auto;
+}
+@media(max-width:900px) { .mockup-grid { grid-template-columns:1fr; } }
+
+.mockup-card {
+  background:var(--glass); border:1px solid var(--glass-border);
+  border-radius:12px; overflow:hidden;
+}
+.mockup-card-header {
+  padding:12px 16px; border-bottom:1px solid var(--hairline);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.mockup-card-header h3 { font-size:13px; font-weight:600; }
+.mockup-card-header .tag {
+  font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600;
+  background:rgba(59,143,255,0.12); color:var(--blue);
+}
+.mockup-body { padding:20px; }
+
+/* ── Full Width Mockup ── */
+.mockup-full { grid-column:1/-1; }
+
+/* ── Modal Scrim (for demo) ── */
+.demo-scrim {
+  background:rgba(0,0,0,0.5); border-radius:8px; padding:32px;
+  display:flex; justify-content:center; align-items:flex-start;
+}
+
+/* ── Modal ── */
+.modal {
+  background:var(--bg-subtle); border:1px solid var(--glass-border);
+  border-radius:16px; width:100%; position:relative;
+  box-shadow:0 24px 48px var(--card-shadow-1), 0 8px 16px var(--card-shadow-2);
+}
+.modal-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:20px 24px 16px; border-bottom:1px solid var(--hairline);
+}
+.modal-title { font-family:'Outfit',sans-serif; font-size:16px; font-weight:700; }
+.modal-close {
+  width:32px; height:32px; border-radius:8px; border:none;
+  background:var(--glass); color:var(--text-3); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background 150ms ease-out, color 150ms ease-out;
+}
+.modal-close:hover { background:var(--glass-elevated); color:var(--text-1); }
+.modal-body { padding:20px 24px; }
+.modal-footer {
+  display:flex; gap:8px; justify-content:flex-end;
+  padding:16px 24px; border-top:1px solid var(--hairline);
+}
+
+/* ── Section Divider ── */
+.modal-section {
+  margin-bottom:20px;
+}
+.modal-section:last-child { margin-bottom:0; }
+.section-label {
+  font-size:11px; font-weight:600; color:var(--text-3);
+  text-transform:uppercase; letter-spacing:0.5px;
+  margin-bottom:12px; display:flex; align-items:center; gap:8px;
+}
+.section-label::after {
+  content:''; flex:1; height:1px; background:var(--hairline);
+}
+
+/* ── Form ── */
+.form-group { margin-bottom:12px; }
+.form-group:last-child { margin-bottom:0; }
+.form-label {
+  display:block; font-size:11px; font-weight:500;
+  color:var(--text-2); margin-bottom:4px;
+}
+.form-input {
+  width:100%; padding:8px 12px; border-radius:8px;
+  border:1px solid var(--glass-border); background:var(--glass);
+  color:var(--text-1); font-size:13px; font-family:inherit;
+  transition:border-color 150ms ease-out;
+  outline:none;
+}
+.form-input:focus { border-color:var(--blue); }
+.form-input::placeholder { color:var(--text-3); }
+select.form-input { cursor:pointer; }
+
+.form-row { display:grid; gap:12px; }
+.form-row-2 { grid-template-columns:1fr 1fr; }
+.form-row-3 { grid-template-columns:1fr 1fr 1fr; }
+
+.form-hint { font-size:10px; color:var(--text-3); margin-top:3px; }
+
+/* ── Date Range ── */
+.date-range {
+  display:flex; align-items:center; gap:8px;
+}
+.date-range .form-input { flex:1; }
+.date-sep { color:var(--text-3); font-size:12px; flex-shrink:0; }
+
+/* ── Buttons ── */
+.btn {
+  padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500;
+  border:1px solid transparent; cursor:pointer; font-family:inherit;
+  display:inline-flex; align-items:center; gap:6px;
+  transition:background 150ms ease-out, border-color 150ms ease-out;
+  min-height:40px;
+}
+.btn:active { transform:scale(0.96); }
+.btn-primary { background:var(--blue); color:#fff; border-color:var(--blue); }
+.btn-primary:hover { background:#4d9aff; }
+.btn-secondary { background:var(--glass-elevated); color:var(--text-1); border-color:var(--glass-border); }
+.btn-secondary:hover { border-color:var(--glass-border-hover); }
+.btn-ghost { background:transparent; color:var(--text-2); }
+.btn-ghost:hover { background:var(--glass); color:var(--text-1); }
+.btn-sm { padding:4px 12px; font-size:12px; min-height:32px; }
+.btn-brand { background:var(--brand); color:#fff; border-color:var(--brand); }
+
+/* ── Badge ── */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500;
+  white-space:nowrap;
+}
+.badge-blue { background:rgba(59,143,255,0.12); color:var(--blue); }
+.badge-teal { background:rgba(0,212,170,0.12); color:var(--teal); }
+.badge-amber { background:rgba(240,160,48,0.12); color:var(--amber); }
+.badge-red { background:rgba(255,64,96,0.12); color:var(--red); }
+.badge-filled-teal { background:var(--teal); color:#fff; }
+.badge-filled-blue { background:var(--blue); color:#fff; }
+.badge-filled-amber { background:var(--amber); color:#fff; }
+
+/* ── Tag Input ── */
+.tag-input-wrap {
+  display:flex; flex-wrap:wrap; gap:6px; padding:6px 10px;
+  border:1px solid var(--glass-border); border-radius:8px;
+  background:var(--glass); min-height:40px; align-items:center;
+}
+.tag-input-wrap:focus-within { border-color:var(--blue); }
+.tag-chip {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500;
+  background:rgba(59,143,255,0.12); color:var(--blue);
+}
+.tag-chip button {
+  background:none; border:none; color:var(--blue); cursor:pointer;
+  font-size:14px; line-height:1; padding:0; opacity:0.6;
+}
+.tag-chip button:hover { opacity:1; }
+.tag-input {
+  border:none; background:transparent; color:var(--text-1);
+  font-size:13px; font-family:inherit; outline:none; flex:1; min-width:80px;
+}
+.tag-input::placeholder { color:var(--text-3); }
+
+/* ── Stat Card (Summary) ── */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.stat-card {
+  padding:14px; border-radius:10px; background:var(--glass);
+  border:1px solid var(--glass-border);
+}
+.stat-label { font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:4px; }
+.stat-value {
+  font-family:'Outfit',sans-serif; font-size:22px; font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+.stat-sub {
+  font-size:11px; margin-top:2px;
+  font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;
+}
+.stat-up { color:var(--teal); }
+.stat-down { color:var(--red); }
+.stat-card-highlight {
+  background:linear-gradient(135deg, rgba(239,93,25,0.08), rgba(59,143,255,0.05));
+  border-color:rgba(239,93,25,0.15);
+}
+
+/* ── Progress Bar ── */
+.progress-bar { height:6px; border-radius:3px; background:var(--glass-border); overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; transition:width 600ms cubic-bezier(.23,1,.32,1); }
+
+/* ── Score Ring (mini) ── */
+.score-ring { display:inline-flex; align-items:center; gap:8px; }
+.score-ring svg { flex-shrink:0; }
+
+/* ── Side Panel / Drawer ── */
+.drawer-demo {
+  background:var(--bg-subtle); border:1px solid var(--glass-border);
+  border-radius:16px; width:100%; overflow:hidden;
+  box-shadow:0 24px 48px var(--card-shadow-1);
+}
+.drawer-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:16px 20px; border-bottom:1px solid var(--hairline);
+}
+.drawer-body { padding:20px; }
+.drawer-footer {
+  padding:16px 20px; border-top:1px solid var(--hairline);
+  display:flex; gap:8px; justify-content:flex-end;
+}
+
+/* ── Dropzone ── */
+.dropzone {
+  border:2px dashed var(--glass-border); border-radius:10px;
+  padding:20px; text-align:center; cursor:pointer;
+  transition:border-color 200ms ease-out, background 200ms ease-out;
+}
+.dropzone:hover { border-color:var(--blue); background:rgba(59,143,255,0.03); }
+.dropzone-icon { color:var(--text-3); margin-bottom:6px; }
+.dropzone-text { font-size:12px; color:var(--text-3); }
+.dropzone-text strong { color:var(--blue); font-weight:500; }
+
+/* ── Tab ── */
+.tab-bar { display:flex; gap:0; border-bottom:1px solid var(--hairline); margin-bottom:16px; }
+.tab-item {
+  padding:8px 16px; font-size:12px; font-weight:500; color:var(--text-3);
+  border:none; background:none; cursor:pointer; border-bottom:2px solid transparent;
+  margin-bottom:-1px; font-family:inherit;
+  transition:color 150ms ease-out, border-color 150ms ease-out;
+  min-height:40px;
+}
+.tab-item:hover { color:var(--text-2); }
+.tab-item.active { color:var(--text-1); border-bottom-color:var(--brand); font-weight:600; }
+
+/* ── Dynamic Options List ── */
+.option-list { display:flex; flex-direction:column; gap:6px; }
+.option-row {
+  display:flex; gap:8px; align-items:center;
+  padding:6px 10px; border-radius:8px; background:var(--glass);
+  border:1px solid var(--glass-border);
+}
+.option-row .form-input { border:none; background:transparent; padding:4px 0; }
+.option-score {
+  width:60px; text-align:center; flex-shrink:0;
+  font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;
+}
+.option-remove {
+  width:24px; height:24px; border-radius:6px; border:none;
+  background:transparent; color:var(--text-3); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:background 150ms ease-out, color 150ms ease-out;
+}
+.option-remove:hover { background:rgba(255,64,96,0.1); color:var(--red); }
+
+/* ── Info Row (for summary) ── */
+.info-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-bottom:1px solid var(--hairline);
+}
+.info-row:last-child { border-bottom:none; }
+.info-label { font-size:12px; color:var(--text-2); }
+.info-value { font-size:13px; font-weight:500; }
+
+/* ── Responsive ── */
+@media(max-width:600px) {
+  .form-row-2, .form-row-3 { grid-template-columns:1fr; }
+  .stat-grid { grid-template-columns:1fr; }
+}
+
+/* ── Ambient ── */
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(59,143,255,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 70% at 80% 75%, rgba(0,212,170,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 40% at 50% 40%, rgba(139,92,246,0.04) 0%, transparent 45%);
+}
+body > * { position:relative; z-index:1; }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">
+  Theme Toggle
+</button>
+
+<h1 class="page-title">컴플라이언스 모달 시안</h1>
+<p class="page-sub">4가지 모달 리디자인 — 다크/라이트 토글로 양쪽 확인 가능</p>
+
+<div class="mockup-grid">
+
+  <!-- ============================================================
+       시안 1: 계획 등록 모달 (PlanCreate)
+       ============================================================ -->
+  <div class="mockup-card">
+    <div class="mockup-card-header">
+      <h3>시안 1: 계획 등록 모달</h3>
+      <span class="tag">BEFORE: 날짜 6개 세로 나열</span>
+    </div>
+    <div class="mockup-body">
+      <div class="demo-scrim">
+        <div class="modal" style="max-width:520px">
+          <div class="modal-header">
+            <div class="modal-title">실태평가 계획 등록</div>
+            <button class="modal-close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- 기본 정보 -->
+            <div class="modal-section">
+              <div class="form-group">
+                <label class="form-label">계획명</label>
+                <input class="form-input" placeholder="2026년 상반기 사이버보안 실태평가">
+              </div>
+              <div class="form-row form-row-2" style="margin-top:12px">
+                <div class="form-group">
+                  <label class="form-label">평가항목</label>
+                  <select class="form-input">
+                    <option>2026 실태평가 v2.0</option>
+                    <option>2025 실태평가 v1.5</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">담당자</label>
+                  <input class="form-input" placeholder="자동 배정" disabled style="opacity:0.5">
+                </div>
+              </div>
+            </div>
+
+            <!-- 일정 섹션 -->
+            <div class="modal-section">
+              <div class="section-label">일정 설정</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div>
+                  <label class="form-label">전체 일정</label>
+                  <div class="date-range">
+                    <input type="date" class="form-input" value="2026-04-01">
+                    <span class="date-sep">~</span>
+                    <input type="date" class="form-input" value="2026-06-30">
+                  </div>
+                </div>
+                <div class="form-row form-row-2">
+                  <div>
+                    <label class="form-label">자체평가</label>
+                    <div class="date-range">
+                      <input type="date" class="form-input" value="2026-04-01">
+                      <span class="date-sep">~</span>
+                      <input type="date" class="form-input" value="2026-05-15">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">현장실사</label>
+                    <div class="date-range">
+                      <input type="date" class="form-input" value="2026-05-20">
+                      <span class="date-sep">~</span>
+                      <input type="date" class="form-input" value="2026-06-15">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost">취소</button>
+            <button class="btn btn-primary">등록</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       시안 2: 현황 요약 모달 (PlanSummary)
+       ============================================================ -->
+  <div class="mockup-card">
+    <div class="mockup-card-header">
+      <h3>시안 2: 현황 요약 모달</h3>
+      <span class="tag">BEFORE: 테이블 7행 혼재</span>
+    </div>
+    <div class="mockup-body">
+      <div class="demo-scrim">
+        <div class="modal" style="max-width:540px">
+          <div class="modal-header">
+            <div>
+              <div class="modal-title">2026 상반기 실태평가</div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px">김진성 / 정보보호부</div>
+            </div>
+            <button class="modal-close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="modal-body" style="padding-bottom:8px">
+            <!-- 이행률 -->
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:12px;color:var(--text-2)">이행률</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;color:var(--teal)">78.4%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:78.4%;background:linear-gradient(90deg,var(--teal),var(--blue))"></div>
+              </div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:4px">120 / 153 항목 완료</div>
+            </div>
+
+            <!-- 점수 카드 그리드 -->
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-label">자체평가</div>
+                <div class="stat-value" style="color:var(--blue)">82.5</div>
+                <div class="stat-sub stat-up">+3.2 vs 전년</div>
+                <div style="font-size:10px;color:var(--text-3);margin-top:2px">153점 만점</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">현장실사</div>
+                <div class="stat-value" style="color:var(--amber)">76.8</div>
+                <div class="stat-sub stat-down">-1.4 vs 전년</div>
+                <div style="font-size:10px;color:var(--text-3);margin-top:2px">153점 만점</div>
+              </div>
+              <div class="stat-card stat-card-highlight" style="grid-column:1/-1">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div class="stat-label">최종 점수</div>
+                    <div class="stat-value" style="color:var(--brand);font-size:28px">79.7</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div class="stat-sub stat-up" style="font-size:12px">+0.9</div>
+                    <div style="font-size:10px;color:var(--text-3)">전년 78.8점</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 하단 정보 -->
+            <div style="margin-top:14px">
+              <div class="info-row">
+                <span class="info-label">후속조치 미흡</span>
+                <span class="badge badge-red">3건</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">미제출 증빙</span>
+                <span class="badge badge-amber">12건</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost">닫기</button>
+            <button class="btn btn-secondary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              PDF 다운로드
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       시안 3: 최종 검토 드로어 (ReviewDrawer)
+       ============================================================ -->
+  <div class="mockup-card">
+    <div class="mockup-card-header">
+      <h3>시안 3: 최종 검토 드로어</h3>
+      <span class="tag">BEFORE: 점수 4종 세로 나열</span>
+    </div>
+    <div class="mockup-body">
+      <div class="drawer-demo">
+        <div class="drawer-header">
+          <div>
+            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700">최종 검토</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px">2026 상반기 실태평가</div>
+          </div>
+          <button class="modal-close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="drawer-body">
+          <!-- 점수 요약을 2열 그리드로 압축 -->
+          <div class="stat-grid" style="margin-bottom:16px">
+            <div class="stat-card">
+              <div class="stat-label">자체평가</div>
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span class="stat-value" style="color:var(--blue);font-size:20px">82.5</span>
+                <span class="stat-sub stat-up">+3.2</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">현장실사</div>
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span class="stat-value" style="color:var(--amber);font-size:20px">76.8</span>
+                <span class="stat-sub stat-down">-1.4</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 검토 점수 입력 -->
+          <div class="modal-section">
+            <div class="section-label">검토 점수 입력</div>
+            <div class="form-row form-row-2">
+              <div class="form-group">
+                <label class="form-label">최종 검토 점수</label>
+                <input type="number" class="form-input" value="79.5" step="0.5"
+                  style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;text-align:center">
+              </div>
+              <div class="stat-card stat-card-highlight" style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:10px">
+                <div class="stat-label">최종점수</div>
+                <div class="stat-value" style="color:var(--brand);font-size:22px">79.7</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 추가제출 -->
+          <div class="modal-section">
+            <div class="section-label">추가 제출</div>
+            <div class="dropzone">
+              <div class="dropzone-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div class="dropzone-text">파일을 드래그하거나 <strong>클릭하여 업로드</strong></div>
+            </div>
+          </div>
+
+          <!-- 검토 내용 -->
+          <div class="form-group">
+            <label class="form-label">검토 내용</label>
+            <textarea class="form-input" rows="3" placeholder="검토 의견을 입력하세요..." style="resize:vertical"></textarea>
+          </div>
+        </div>
+        <div class="drawer-footer">
+          <button class="btn btn-ghost">취소</button>
+          <button class="btn btn-primary">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       시안 4: 항목 등록 모달 (ItemModal) — 탭 기반
+       ============================================================ -->
+  <div class="mockup-card">
+    <div class="mockup-card-header">
+      <h3>시안 4: 항목 등록 모달 (탭 분리)</h3>
+      <span class="tag">BEFORE: 3섹션 90vh 스크롤</span>
+    </div>
+    <div class="mockup-body">
+      <div class="demo-scrim">
+        <div class="modal" style="max-width:640px">
+          <div class="modal-header">
+            <div class="modal-title">평가 항목 등록</div>
+            <button class="modal-close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style="padding:0 24px">
+            <div class="tab-bar">
+              <button class="tab-item active">기본 정보</button>
+              <button class="tab-item">평가 설정</button>
+              <button class="tab-item">증빙 / 기타</button>
+            </div>
+          </div>
+          <div class="modal-body" style="padding-top:4px;max-height:50vh;overflow-y:auto">
+            <!-- 탭 1: 기본 정보 (활성) -->
+            <div class="form-row form-row-3" style="margin-bottom:12px">
+              <div class="form-group">
+                <label class="form-label">항목번호</label>
+                <input class="form-input" value="1.1.1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">질의번호</label>
+                <input class="form-input" value="Q-001">
+              </div>
+              <div class="form-group">
+                <label class="form-label">항목분류</label>
+                <select class="form-input">
+                  <option>관리체계</option>
+                  <option>물리적 보안</option>
+                  <option>기술적 보안</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">항목내용</label>
+              <input class="form-input" value="정보보호 정책 수립 및 승인 여부">
+            </div>
+            <div class="form-row form-row-2">
+              <div class="form-group">
+                <label class="form-label">담당자</label>
+                <input class="form-input" placeholder="담당자 지정">
+              </div>
+              <div class="form-group">
+                <label class="form-label">소관부서</label>
+                <input class="form-input" placeholder="소관부서 지정">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost">취소</button>
+            <button class="btn btn-primary">저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       시안 5: 항목 등록 — 평가 설정 탭
+       ============================================================ -->
+  <div class="mockup-card mockup-full">
+    <div class="mockup-card-header">
+      <h3>시안 5: 항목 등록 — "평가 설정" 탭 내용</h3>
+      <span class="tag">BEFORE: 동적 옵션 raw 구현</span>
+    </div>
+    <div class="mockup-body">
+      <div class="demo-scrim">
+        <div class="modal" style="max-width:640px">
+          <div class="modal-header">
+            <div class="modal-title">평가 항목 수정</div>
+            <button class="modal-close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style="padding:0 24px">
+            <div class="tab-bar">
+              <button class="tab-item">기본 정보</button>
+              <button class="tab-item active">평가 설정</button>
+              <button class="tab-item">증빙 / 기타</button>
+            </div>
+          </div>
+          <div class="modal-body" style="padding-top:4px;max-height:50vh;overflow-y:auto">
+            <!-- 질의 내용 -->
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">질의 내용</label>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <textarea class="form-input" rows="2" style="flex:1;resize:vertical">정보보호 정책이 수립되어 있으며, 경영진의 승인을 받았는가?</textarea>
+                <div style="text-align:center;flex-shrink:0;width:70px">
+                  <label class="form-label" style="margin-bottom:4px">배점</label>
+                  <input type="number" class="form-input" value="3.0" step="0.5"
+                    style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:600">
+                </div>
+              </div>
+            </div>
+
+            <!-- 자체평가 선택지 -->
+            <div class="modal-section">
+              <div class="section-label">자체평가 선택지</div>
+              <div class="option-list">
+                <div class="option-row">
+                  <span style="font-size:11px;color:var(--text-3);width:16px;text-align:center;flex-shrink:0">1</span>
+                  <input class="form-input" value="정책 수립 및 경영진 승인 완료" style="flex:1">
+                  <input type="number" class="form-input option-score" value="3.0" step="0.5">
+                  <button class="option-remove">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <div class="option-row">
+                  <span style="font-size:11px;color:var(--text-3);width:16px;text-align:center;flex-shrink:0">2</span>
+                  <input class="form-input" value="정책 수립되었으나 승인 미완료" style="flex:1">
+                  <input type="number" class="form-input option-score" value="1.5" step="0.5">
+                  <button class="option-remove">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <div class="option-row">
+                  <span style="font-size:11px;color:var(--text-3);width:16px;text-align:center;flex-shrink:0">3</span>
+                  <input class="form-input" value="정책 미수립" style="flex:1">
+                  <input type="number" class="form-input option-score" value="0.0" step="0.5">
+                  <button class="option-remove">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:8px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                선택지 추가
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost">취소</button>
+            <button class="btn btn-primary">저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       시안 6: 부점 선택 + 태그 입력 (SecurityAudit/CyberDiagnosis)
+       ============================================================ -->
+  <div class="mockup-card mockup-full">
+    <div class="mockup-card-header">
+      <h3>시안 6: 감사 계획 등록 (부점 태그 입력)</h3>
+      <span class="tag">BEFORE: input + button + badge 분리</span>
+    </div>
+    <div class="mockup-body">
+      <div class="demo-scrim">
+        <div class="modal" style="max-width:540px">
+          <div class="modal-header">
+            <div class="modal-title">정보보안감사 계획 등록</div>
+            <button class="modal-close">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">계획명</label>
+              <input class="form-input" value="2026 상반기 정보보안감사">
+            </div>
+
+            <!-- 부점 선택 — 통합 태그 입력 -->
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">대상 부점</label>
+              <div class="tag-input-wrap">
+                <span class="tag-chip">본점 <button>&times;</button></span>
+                <span class="tag-chip">강남지점 <button>&times;</button></span>
+                <span class="tag-chip">판교센터 <button>&times;</button></span>
+                <input class="tag-input" placeholder="부점명 입력 후 Enter">
+              </div>
+              <div class="form-hint">Enter로 추가, 클릭으로 제거</div>
+            </div>
+
+            <div class="modal-section">
+              <div class="section-label">일정 설정</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div>
+                  <label class="form-label">전체 일정</label>
+                  <div class="date-range">
+                    <input type="date" class="form-input" value="2026-04-01">
+                    <span class="date-sep">~</span>
+                    <input type="date" class="form-input" value="2026-06-30">
+                  </div>
+                </div>
+                <div class="form-row form-row-2">
+                  <div>
+                    <label class="form-label">자체평가</label>
+                    <div class="date-range">
+                      <input type="date" class="form-input" value="2026-04-01">
+                      <span class="date-sep">~</span>
+                      <input type="date" class="form-input" value="2026-05-15">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">현장실사</label>
+                    <div class="date-range">
+                      <input type="date" class="form-input" value="2026-05-20">
+                      <span class="date-sep">~</span>
+                      <input type="date" class="form-input" value="2026-06-15">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:14px">
+              <label class="form-label">평가항목</label>
+              <select class="form-input">
+                <option>2026 정보보안감사 v3.0</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost">취소</button>
+            <button class="btn btn-primary">등록</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

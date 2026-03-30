@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark" style="color-scheme:dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>항목 상세 모달 시안</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050510; --bg-subtle:#0a0b1a;
+  --glass:rgba(255,255,255,0.035); --glass-elevated:rgba(255,255,255,0.06);
+  --glass-border:rgba(255,255,255,0.07); --glass-border-hover:rgba(255,255,255,0.13);
+  --text-1:#eaedf3; --text-2:#7d8799; --text-3:#454d5e;
+  --blue:#3b8fff; --teal:#00d4aa; --amber:#f0a030; --red:#ff4060;
+  --purple:#8b5cf6; --cyan:#06b6d4; --brand:#ef5d19;
+  --hairline:rgba(255,255,255,0.06);
+  --card-shadow-1:rgba(0,0,0,0.25); --card-shadow-2:rgba(0,0,0,0.12);
+}
+[data-theme="light"] {
+  --bg:#f2f3f8; --bg-subtle:#e8e9f0;
+  --glass:rgba(255,255,255,0.75); --glass-elevated:rgba(255,255,255,0.9);
+  --glass-border:rgba(0,0,0,0.07); --glass-border-hover:rgba(0,0,0,0.13);
+  --text-1:#0a0c18; --text-2:#4a5068; --text-3:#8890a4;
+  --blue:#2b7ae8; --teal:#00b894; --amber:#d98d20; --red:#e8304a;
+  --purple:#7c4ddb; --cyan:#0597b5; --brand:#ef5d19;
+  --hairline:rgba(0,0,0,0.06);
+  --card-shadow-1:rgba(0,0,0,0.06); --card-shadow-2:rgba(0,0,0,0.04);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'IBM Plex Sans',-apple-system,sans-serif;font-size:13px;line-height:1.5;color:var(--text-1);background:var(--bg);padding:40px}
+h1,h2,h3{font-family:'Outfit',sans-serif;text-wrap:balance}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 15% 20%,rgba(59,143,255,0.07) 0%,transparent 55%),radial-gradient(ellipse 50% 70% at 80% 75%,rgba(0,212,170,0.05) 0%,transparent 50%)}
+body>*{position:relative;z-index:1}
+
+.theme-toggle{position:fixed;top:16px;right:16px;z-index:9999;background:var(--glass-elevated);border:1px solid var(--glass-border);color:var(--text-2);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit}
+.page-title{font-size:24px;font-weight:700;margin-bottom:8px}
+.page-sub{font-size:13px;color:var(--text-2);margin-bottom:32px}
+
+/* ── Modal Shell ── */
+.modal-scrim{background:rgba(0,0,0,0.5);border-radius:12px;padding:24px;display:flex;justify-content:center;align-items:flex-start;margin-bottom:32px}
+.modal{background:var(--bg-subtle);border:1px solid var(--glass-border);border-radius:16px;width:100%;box-shadow:0 24px 48px var(--card-shadow-1);display:flex;flex-direction:column;overflow:hidden}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 24px 14px;border-bottom:1px solid var(--hairline)}
+.modal-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700}
+.modal-subtitle{font-size:11px;color:var(--text-3);margin-top:2px}
+.modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--glass);color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 150ms ease-out}
+.modal-close:hover{background:var(--glass-elevated);color:var(--text-1)}
+.modal-body{padding:20px 24px;flex:1;overflow-y:auto}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--hairline)}
+
+/* ── Buttons ── */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid transparent;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:background 150ms ease-out;min-height:40px}
+.btn:active{transform:scale(0.96)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-secondary{background:var(--glass-elevated);color:var(--text-1);border-color:var(--glass-border)}
+.btn-ghost{background:transparent;color:var(--text-2)}
+.btn-ghost:hover{background:var(--glass);color:var(--text-1)}
+.btn-brand{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn-sm{padding:4px 12px;font-size:12px;min-height:32px}
+.btn-danger{background:rgba(255,64,96,0.1);color:var(--red);border-color:rgba(255,64,96,0.2)}
+
+/* ── Badge ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge-blue{background:rgba(59,143,255,0.12);color:var(--blue)}
+.badge-teal{background:rgba(0,212,170,0.12);color:var(--teal)}
+.badge-amber{background:rgba(240,160,48,0.12);color:var(--amber)}
+.badge-red{background:rgba(255,64,96,0.12);color:var(--red)}
+.badge-purple{background:rgba(139,92,246,0.12);color:var(--purple)}
+.badge-filled-blue{background:var(--blue);color:#fff}
+.badge-filled-teal{background:var(--teal);color:#fff}
+
+/* ── Form ── */
+.form-input{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-1);font-size:13px;font-family:inherit;outline:none;transition:border-color 150ms ease-out}
+.form-input:focus{border-color:var(--blue)}
+.form-label{display:block;font-size:11px;font-weight:500;color:var(--text-2);margin-bottom:4px}
+.form-check{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;min-height:28px}
+
+/* ── Section label ── */
+.section-label{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--hairline)}
+
+/* ============================================================
+   시안 A: 2-Column 레이아웃 (현재 구조 개선)
+   ============================================================ */
+.detail-2col{display:flex;gap:0;min-height:500px}
+.detail-main{flex:1;min-width:0;padding-right:20px;display:flex;flex-direction:column;gap:16px}
+.detail-sidebar{width:300px;border-left:1px solid var(--hairline);padding-left:20px;display:flex;flex-direction:column;flex-shrink:0}
+
+/* ── Info card ── */
+.info-card{padding:14px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border)}
+.info-card-label{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:2px}
+.info-card-value{font-size:13px;font-weight:500;line-height:1.5}
+
+/* ── Query box ── */
+.query-box{padding:12px 16px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);font-size:13px;line-height:1.6;position:relative}
+.query-score{position:absolute;top:10px;right:12px;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:12px;font-weight:600;color:var(--brand);background:rgba(239,93,25,0.1);padding:2px 8px;border-radius:6px}
+
+/* ── Eval option ── */
+.eval-option{display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:background 150ms ease-out,border-color 150ms ease-out}
+.eval-option:hover{background:var(--glass)}
+.eval-option.selected{background:color-mix(in srgb,var(--brand) 8%,transparent);border-color:color-mix(in srgb,var(--brand) 25%,transparent)}
+.eval-option .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--glass-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color 150ms ease-out,background 150ms ease-out}
+.eval-option.selected .radio{border-color:var(--brand);background:var(--brand)}
+.eval-option.selected .radio::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.eval-option .opt-text{flex:1;font-size:12px;line-height:1.5}
+.eval-option .opt-score{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;color:var(--text-2);flex-shrink:0;min-width:36px;text-align:right}
+.eval-option.selected .opt-score{color:var(--brand)}
+
+/* ── Onsite eval (blue variant) ── */
+.eval-option.onsite.selected{background:color-mix(in srgb,var(--blue) 8%,transparent);border-color:color-mix(in srgb,var(--blue) 25%,transparent)}
+.eval-option.onsite.selected .radio{border-color:var(--blue);background:var(--blue)}
+.eval-option.onsite.selected .opt-score{color:var(--blue)}
+
+/* ── Self-eval readonly ── */
+.readonly-panel{padding:14px;border-radius:10px;background:color-mix(in srgb,var(--brand) 5%,transparent);border-left:3px solid var(--brand)}
+.readonly-option{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:6px;font-size:12px}
+.readonly-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Evidence chip ── */
+.evidence-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);font-size:12px;transition:background 150ms ease-out}
+.evidence-chip:hover{background:var(--glass-elevated)}
+.evidence-chip .file-icon{color:var(--brand);flex-shrink:0}
+.evidence-chip .file-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evidence-chip .file-size{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-3);flex-shrink:0}
+.evidence-chip .file-delete{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 150ms ease-out,color 150ms ease-out}
+.evidence-chip .file-delete:hover{background:rgba(255,64,96,0.1);color:var(--red)}
+
+/* ── Upload area ── */
+.upload-area{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;border:2px dashed var(--glass-border);border-radius:10px;cursor:pointer;transition:border-color 200ms ease-out,background 200ms ease-out}
+.upload-area:hover{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 3%,transparent)}
+
+/* ── Review status pills ── */
+.review-pills{display:flex;gap:6px;flex-wrap:wrap}
+.review-pill{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--glass-border);background:transparent;color:var(--text-2);transition:background 150ms ease-out,border-color 150ms ease-out,color 150ms ease-out;font-family:inherit}
+.review-pill:hover{background:var(--glass);border-color:var(--glass-border-hover)}
+.review-pill.active-red{background:rgba(255,64,96,0.1);border-color:rgba(255,64,96,0.3);color:var(--red)}
+.review-pill.active-teal{background:rgba(0,212,170,0.1);border-color:rgba(0,212,170,0.3);color:var(--teal)}
+.review-pill.active-amber{background:rgba(240,160,48,0.1);border-color:rgba(240,160,48,0.3);color:var(--amber)}
+
+/* ── Comment ── */
+.comment-input-wrap{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);margin-bottom:12px}
+.comment-input-wrap textarea{border:none;background:transparent;color:var(--text-1);resize:none;min-height:44px;outline:none;font-size:12px;line-height:1.5;font-family:inherit}
+.comment-input-wrap textarea::placeholder{color:var(--text-3)}
+
+.comment-card{padding:10px 12px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);margin-bottom:8px;transition:background 150ms ease-out}
+.comment-card:hover{background:var(--glass-elevated)}
+.comment-avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+
+.comments-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 0;color:var(--text-3);font-size:11px;text-align:center;gap:6px}
+
+/* ── Onsite scoring card ── */
+.onsite-panel{padding:14px;border-radius:10px;background:color-mix(in srgb,var(--blue) 5%,transparent);border-left:3px solid var(--blue)}
+
+/* ── Notes box ── */
+.notes-box{padding:10px 14px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);font-size:12px;line-height:1.6;color:var(--text-2)}
+
+/* ── Responsive ── */
+@media(max-width:800px){.detail-2col{flex-direction:column}.detail-sidebar{width:100%;border-left:none;border-top:1px solid var(--hairline);padding-left:0;padding-top:16px}}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">Theme Toggle</button>
+
+<h1 class="page-title">항목 상세 모달 시안</h1>
+<p class="page-sub">ResponseDetailModal — 자체평가 / 현장실사 2가지 상태</p>
+
+<!-- ============================================================
+     시안 A: 자체평가 모드 (Self-Eval Phase)
+     ============================================================ -->
+<h2 style="font-size:16px;margin-bottom:12px;color:var(--text-2)">A. 자체평가 모드</h2>
+<div class="modal-scrim">
+  <div class="modal" style="max-width:920px;max-height:80vh">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">항목 상세 평가</div>
+        <div class="modal-subtitle">1.1.1 &middot; Q-001 &middot; 관리체계</div>
+      </div>
+      <button class="modal-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-2col">
+        <!-- ── Left: Main Content ── -->
+        <div class="detail-main">
+
+          <!-- 항목 정보 + 검토 상태 -->
+          <div>
+            <div style="display:flex;gap:12px;margin-bottom:12px">
+              <div class="info-card" style="flex:1">
+                <div class="info-card-label">항목 내용</div>
+                <div class="info-card-value">정보보호 정책 수립 및 승인 여부</div>
+              </div>
+              <div class="info-card" style="width:120px;text-align:center">
+                <div class="info-card-label">담당자</div>
+                <div class="info-card-value">김진성</div>
+              </div>
+            </div>
+            <div class="section-label">검토 상태</div>
+            <div class="review-pills">
+              <button class="review-pill active-red">미검토</button>
+              <button class="review-pill">검토완료</button>
+              <button class="review-pill">보완필요</button>
+            </div>
+          </div>
+
+          <!-- 질의 내용 -->
+          <div>
+            <div class="section-label">질의 내용</div>
+            <div class="query-box">
+              정보보호 정책이 수립되어 있으며, 경영진의 승인을 받았는가?
+              <span class="query-score">배점 3.0</span>
+            </div>
+          </div>
+
+          <!-- 자체평가 선택 -->
+          <div>
+            <div class="section-label">자체 평가</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div class="eval-option selected">
+                <span class="radio"></span>
+                <span class="opt-text">정책 수립 및 경영진 승인 완료</span>
+                <span class="opt-score">3.0</span>
+              </div>
+              <div class="eval-option">
+                <span class="radio"></span>
+                <span class="opt-text">정책 수립되었으나 승인 미완료</span>
+                <span class="opt-score">1.5</span>
+              </div>
+              <div class="eval-option">
+                <span class="radio"></span>
+                <span class="opt-text">정책 미수립</span>
+                <span class="opt-score">0.0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 증빙 자료 -->
+          <div>
+            <div class="section-label">증빙 자료</div>
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;line-height:1.5">정보보호정책서, 정보보호위원회 회의록, 경영진 결재문서 등</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              <div class="evidence-chip">
+                <span class="file-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>
+                <span class="file-name">정보보호정책서_v3.2.pdf</span>
+                <span class="file-size">2.4MB</span>
+                <button class="file-delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+              <div class="evidence-chip">
+                <span class="file-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>
+                <span class="file-name">위원회_회의록_2026Q1.hwp</span>
+                <span class="file-size">856KB</span>
+                <button class="file-delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+            </div>
+            <div style="margin-bottom:6px"><span class="badge badge-amber" style="font-size:10px">참고자료 (전년도)</span></div>
+            <div style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:6px;margin-bottom:10px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+              정보보호정책서_v2.8_2025.pdf
+            </div>
+            <div class="upload-area">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-size:12px;color:var(--text-3)">클릭 또는 드래그하여 <span style="color:var(--brand);font-weight:500">파일 업로드</span></div>
+            </div>
+          </div>
+
+          <!-- 비고 -->
+          <div>
+            <div class="section-label">비고</div>
+            <div class="notes-box">2026년 1월 정보보호위원회에서 정책 갱신 및 승인 완료. 연 1회 정기 검토 예정.</div>
+          </div>
+
+        </div>
+
+        <!-- ── Right: Comments ── -->
+        <div class="detail-sidebar">
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            댓글 <span class="badge badge-filled-blue" style="border-radius:50%;font-size:9px;padding:1px 5px;min-width:18px;display:inline-flex;align-items:center;justify-content:center">3</span>
+          </div>
+
+          <div class="comment-input-wrap">
+            <textarea placeholder="댓글을 입력하세요..." rows="2"></textarea>
+            <div style="display:flex;justify-content:flex-end"><button class="btn btn-brand btn-sm" disabled>게시</button></div>
+          </div>
+
+          <div class="comment-card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span class="comment-avatar" style="background:var(--blue)">김진</span>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600">김진성 <span style="font-weight:400;color:var(--text-3);font-size:11px">정보보호부</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:10px;color:var(--text-3)">2026-03-28 14:32</div>
+              </div>
+            </div>
+            <div style="font-size:12px;line-height:1.6;color:var(--text-2);padding-left:36px">정보보호정책서 v3.2 승인 완료. 추가 확인 사항은 없는지 검토 부탁드립니다.</div>
+          </div>
+
+          <div class="comment-card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span class="comment-avatar" style="background:var(--purple)">안하</span>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600">안하빈 <span style="font-weight:400;color:var(--text-3);font-size:11px">보안아키텍트팀</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:10px;color:var(--text-3)">2026-03-28 15:10</div>
+              </div>
+            </div>
+            <div style="font-size:12px;line-height:1.6;color:var(--text-2);padding-left:36px">확인했습니다. 위원회 회의록에 서명 페이지가 누락된 것 같아요. 보완 필요합니다.</div>
+          </div>
+
+          <div class="comment-card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span class="comment-avatar" style="background:var(--teal)">이병</span>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600">이병곤 <span style="font-weight:400;color:var(--text-3);font-size:11px">CISO</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:10px;color:var(--text-3)">2026-03-28 16:45</div>
+              </div>
+            </div>
+            <div style="font-size:12px;line-height:1.6;color:var(--text-2);padding-left:36px">서명 페이지 보완 후 재업로드 해주세요. 점수는 최종 검토 시 반영하겠습니다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary">취소</button>
+      <button class="btn btn-brand">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     시안 B: 현장실사 모드 (Onsite Phase)
+     ============================================================ -->
+<h2 style="font-size:16px;margin-bottom:12px;color:var(--text-2)">B. 현장실사 모드 (자체평가 결과 + 현장 채점)</h2>
+<div class="modal-scrim">
+  <div class="modal" style="max-width:920px;max-height:80vh">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">현장실사 평가</div>
+        <div class="modal-subtitle">1.1.1 &middot; Q-001 &middot; 관리체계</div>
+      </div>
+      <button class="modal-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-2col">
+        <div class="detail-main">
+
+          <!-- 항목 + 담당자 -->
+          <div style="display:flex;gap:12px">
+            <div class="info-card" style="flex:1">
+              <div class="info-card-label">항목 내용</div>
+              <div class="info-card-value">정보보호 정책 수립 및 승인 여부</div>
+            </div>
+            <div class="info-card" style="width:120px;text-align:center">
+              <div class="info-card-label">담당자</div>
+              <div class="info-card-value">김진성</div>
+            </div>
+          </div>
+
+          <!-- 질의 -->
+          <div>
+            <div class="section-label">질의 내용</div>
+            <div class="query-box">
+              정보보호 정책이 수립되어 있으며, 경영진의 승인을 받았는가?
+              <span class="query-score">배점 3.0</span>
+            </div>
+          </div>
+
+          <!-- 자체평가 결과 (읽기 전용) -->
+          <div>
+            <div class="section-label">자체평가 결과 (읽기전용)</div>
+            <div class="readonly-panel">
+              <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">
+                <div class="readonly-option" style="opacity:1">
+                  <span class="readonly-dot" style="background:var(--brand)"></span>
+                  <span style="flex:1;font-size:12px;color:var(--text-1)">정책 수립 및 경영진 승인 완료</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--brand)">3.0</span>
+                </div>
+                <div class="readonly-option" style="opacity:0.4">
+                  <span class="readonly-dot" style="background:var(--text-3)"></span>
+                  <span style="flex:1;font-size:12px;color:var(--text-3)">정책 수립되었으나 승인 미완료</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-3)">1.5</span>
+                </div>
+                <div class="readonly-option" style="opacity:0.4">
+                  <span class="readonly-dot" style="background:var(--text-3)"></span>
+                  <span style="flex:1;font-size:12px;color:var(--text-3)">정책 미수립</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-3)">0.0</span>
+                </div>
+              </div>
+              <div style="font-size:12px;font-weight:600">자체평가 점수: <span style="color:var(--brand);font-family:'IBM Plex Mono',monospace">3.0점</span></div>
+            </div>
+          </div>
+
+          <!-- 현장 평가 채점 -->
+          <div>
+            <div class="section-label">현장 평가 채점</div>
+            <div class="onsite-panel">
+              <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">현장실사 결과에 따라 점수를 부여하세요 (배점: 3.0점)</div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+                <div class="eval-option onsite">
+                  <span class="radio"></span>
+                  <span class="opt-text">정책 수립 및 경영진 승인 완료</span>
+                  <span class="opt-score">3.0</span>
+                </div>
+                <div class="eval-option onsite selected">
+                  <span class="radio"></span>
+                  <span class="opt-text">정책 수립되었으나 승인 미완료</span>
+                  <span class="opt-score">1.5</span>
+                </div>
+                <div class="eval-option onsite">
+                  <span class="radio"></span>
+                  <span class="opt-text">정책 미수립</span>
+                  <span class="opt-score">0.0</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px solid rgba(59,143,255,0.15)">
+                <span style="font-size:12px;color:var(--text-2)">직접 입력:</span>
+                <input class="form-input" type="number" step="0.01" value="1.5" style="width:80px;text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-3)">/ 3.0점</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 증빙 -->
+          <div>
+            <div class="section-label">증빙 자료</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              <div class="evidence-chip">
+                <span class="file-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>
+                <span class="file-name">정보보호정책서_v3.2.pdf</span>
+                <span class="file-size">2.4MB</span>
+                <button class="file-delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+            </div>
+            <div class="upload-area">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-size:12px;color:var(--text-3)">클릭 또는 드래그하여 <span style="color:var(--brand);font-weight:500">파일 업로드</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Right: Comments ── -->
+        <div class="detail-sidebar">
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">댓글</div>
+          <div class="comment-input-wrap">
+            <textarea placeholder="댓글을 입력하세요..." rows="2"></textarea>
+            <div style="display:flex;justify-content:flex-end"><button class="btn btn-brand btn-sm" disabled>게시</button></div>
+          </div>
+          <div class="comments-empty">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <div>댓글이 없습니다</div>
+            <div style="font-size:10px;opacity:0.6">첫 댓글을 작성해보세요</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary">취소</button>
+      <button class="btn btn-brand">저장</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,2205 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>withVTM v4.0 — Security Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; overflow-x: hidden; }
+h1, h2, h3, h4, h5 { font-family: 'Fraunces', serif; text-wrap: balance; font-weight: 400; }
+p, li { text-wrap: pretty; }
+img, svg { display: block; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+table { border-collapse: collapse; width: 100%; }
+
+/* Tabular nums everywhere for data */
+.mono, [data-num], td, th, .kpi-value, .metric-value, .stat-number {
+  font-family: 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== THEME CUSTOM PROPERTIES ===== */
+:root {
+  --accent: #ef5d19;
+  --accent-hover: #d9510f;
+  --accent-subtle: rgba(239, 93, 25, 0.08);
+  --accent-subtle-border: rgba(239, 93, 25, 0.15);
+  --transition-smooth: 400ms cubic-bezier(.23,1,.32,1);
+  --transition-fast: 200ms cubic-bezier(.23,1,.32,1);
+  --radius-card: 8px;
+  --radius-input: 6px;
+  --sidebar-collapsed: 56px;
+  --sidebar-expanded: 240px;
+}
+
+[data-theme="dark"] {
+  --bg-root: #111114;
+  --bg-surface: #1a1a1f;
+  --bg-surface-2: #222228;
+  --bg-surface-hover: #28282f;
+  --border: #2a2a32;
+  --border-subtle: #222228;
+  --text-primary: #e8e8ec;
+  --text-secondary: #9898a4;
+  --text-tertiary: #6a6a72;
+  --text-inverse: #111114;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  --shadow-card-hover: 0 2px 4px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.25);
+  --shadow-sidebar: 4px 0 24px rgba(0,0,0,0.4);
+  --severity-high: #e04545;
+  --severity-medium: #d4a843;
+  --severity-low: #5a9a6a;
+  --chart-line: #4a4a55;
+  --progress-bg: #2a2a32;
+  --scrollbar-thumb: #3a3a44;
+  --overlay: rgba(0,0,0,0.5);
+}
+
+[data-theme="light"] {
+  --bg-root: #f5f5f0;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #eaeae5;
+  --bg-surface-hover: #e0e0db;
+  --border: #d5d5d0;
+  --border-subtle: #e5e5e0;
+  --text-primary: #1a1a1f;
+  --text-secondary: #6a6a72;
+  --text-tertiary: #9898a4;
+  --text-inverse: #f5f5f0;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-card-hover: 0 2px 4px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-sidebar: 4px 0 24px rgba(0,0,0,0.08);
+  --severity-high: #cc3333;
+  --severity-medium: #b8922e;
+  --severity-low: #3d8a50;
+  --chart-line: #d0d0cb;
+  --progress-bg: #e5e5e0;
+  --scrollbar-thumb: #c5c5c0;
+  --overlay: rgba(0,0,0,0.2);
+}
+
+body {
+  background: var(--bg-root);
+  color: var(--text-primary);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+
+/* ===== LAYOUT ===== */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-collapsed);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transition-property: width, box-shadow;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+  overflow: hidden;
+}
+
+.sidebar:hover, .sidebar.pinned {
+  width: var(--sidebar-expanded);
+  box-shadow: var(--shadow-sidebar);
+}
+
+.sidebar-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.sidebar-logo {
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-logo svg { width: 16px; height: 16px; fill: #fff; }
+
+.sidebar-brand {
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.sidebar:hover .sidebar-brand, .sidebar.pinned .sidebar-brand { opacity: 1; }
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+}
+
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  padding: 12px 16px 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.sidebar:hover .nav-group-label, .sidebar.pinned .nav-group-label { opacity: 1; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 40px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  white-space: nowrap;
+  transition-property: color, background;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+  position: relative;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.nav-item.active {
+  color: var(--text-primary);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-item-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-item-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-item-text {
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.sidebar:hover .nav-item-text, .sidebar.pinned .nav-item-text { opacity: 1; }
+
+.sidebar-footer {
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-input);
+  color: var(--text-secondary);
+  transition-property: color, background;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.sidebar-toggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.sidebar-toggle svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* ===== MAIN ===== */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-collapsed);
+  transition-property: margin-left;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+/* ===== TOP BAR ===== */
+.topbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-root);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.topbar-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-input);
+  color: var(--text-secondary);
+  transition-property: color, background;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.topbar-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.topbar-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-toggle {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.theme-toggle .sun, .theme-toggle .moon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition-property: opacity, transform;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+[data-theme="dark"] .theme-toggle .sun { opacity: 1; transform: rotate(0deg); }
+[data-theme="dark"] .theme-toggle .moon { opacity: 0; transform: rotate(-90deg); }
+[data-theme="light"] .theme-toggle .sun { opacity: 0; transform: rotate(90deg); }
+[data-theme="light"] .theme-toggle .moon { opacity: 1; transform: rotate(0deg); }
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface-2);
+  outline: 1px solid rgba(128,128,128,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+/* ===== TABS ===== */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-root);
+}
+
+.tab-item {
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  padding: 14px 20px 12px;
+  position: relative;
+  transition-property: color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+  white-space: nowrap;
+}
+
+.tab-item:hover {
+  color: var(--text-secondary);
+}
+
+.tab-item.active {
+  color: var(--text-primary);
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px 1px 0 0;
+}
+
+/* ===== DASHBOARD CONTENT ===== */
+.dashboard {
+  padding: 28px 32px 48px;
+  max-width: 1280px;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  transition-property: box-shadow, transform;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ===== EDITORIAL GRID ===== */
+.editorial-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.grid-magazine {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-2col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.span-full { grid-column: 1 / -1; }
+.span-2 { grid-column: span 2; }
+
+/* ===== SECTION TITLE ===== */
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 300;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 28px;
+}
+
+/* ===== HERO METRIC ===== */
+.hero-metric {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding: 32px;
+}
+
+.hero-gauge {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.hero-gauge svg {
+  width: 160px;
+  height: 160px;
+  transform: rotate(-90deg);
+}
+
+.hero-gauge-bg {
+  fill: none;
+  stroke: var(--progress-bg);
+  stroke-width: 8;
+}
+
+.hero-gauge-fill {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 408;
+  stroke-dashoffset: 408;
+  transition-property: stroke-dashoffset;
+  transition-duration: 1200ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.hero-gauge-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-gauge-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.hero-gauge-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+.hero-info {
+  flex: 1;
+}
+
+.hero-info .section-title {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.hero-info .hero-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  max-width: 420px;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.hero-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hero-stat-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== METRIC CARD ===== */
+.metric-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 4px;
+}
+
+.metric-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar {
+  height: 6px;
+  background: var(--progress-bg);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--text-secondary);
+  transition-property: width;
+  transition-duration: 1000ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.progress-fill.accent {
+  background: var(--accent);
+}
+
+/* ===== TABLE ===== */
+.editorial-table {
+  width: 100%;
+}
+
+.editorial-table th {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.editorial-table td {
+  font-size: 13px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.editorial-table tr:last-child td {
+  border-bottom: none;
+}
+
+.editorial-table .mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.editorial-table .text-secondary {
+  color: var(--text-secondary);
+}
+
+/* ===== SPARKLINE ===== */
+.sparkline {
+  display: flex;
+  align-items: end;
+  gap: 2px;
+  height: 32px;
+  margin-top: 12px;
+}
+
+.sparkline-bar {
+  flex: 1;
+  background: var(--text-tertiary);
+  border-radius: 2px 2px 0 0;
+  min-width: 3px;
+  opacity: 0.5;
+  transition-property: opacity, height;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.sparkline-bar:last-child {
+  opacity: 0.9;
+}
+
+/* ===== UPTIME ===== */
+.uptime-value {
+  font-family: 'Fraunces', serif;
+  font-size: 48px;
+  font-weight: 300;
+  color: var(--text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.uptime-unit {
+  font-size: 20px;
+  color: var(--text-tertiary);
+  font-weight: 300;
+}
+
+/* ===== TIMELINE ===== */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  position: relative;
+}
+
+.timeline-dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 12px;
+  flex-shrink: 0;
+}
+
+.timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.timeline-dot.accent { background: var(--accent); }
+.timeline-dot.warn { background: var(--severity-medium); }
+.timeline-dot.ok { background: var(--severity-low); }
+
+.timeline-line {
+  width: 1px;
+  flex: 1;
+  background: var(--border);
+  margin-top: 4px;
+}
+
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-time {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 2px;
+}
+
+.timeline-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.timeline-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* ===== KPI STRIP ===== */
+.kpi-strip {
+  display: flex;
+  gap: 0;
+}
+
+.kpi-item {
+  flex: 1;
+  padding: 20px 24px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpi-item:last-child { border-right: none; }
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.kpi-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.kpi-value.accent { color: var(--accent); }
+
+/* ===== HORIZONTAL BAR ===== */
+.hbar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hbar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hbar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.hbar-label {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.hbar-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.hbar-track {
+  height: 6px;
+  background: var(--progress-bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hbar-fill {
+  height: 100%;
+  background: var(--text-secondary);
+  border-radius: 3px;
+  transition-property: width;
+  transition-duration: 800ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+/* ===== SEVERITY CARDS ===== */
+.severity-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.severity-card {
+  padding: 20px;
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.severity-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.severity-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 32px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.severity-value.critical { color: var(--accent); }
+.severity-value.high { color: var(--severity-high); }
+.severity-value.medium { color: var(--severity-medium); }
+.severity-value.low { color: var(--severity-low); }
+
+.severity-indicator {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 8px;
+}
+
+.severity-indicator.critical { background: var(--accent); }
+.severity-indicator.high { background: var(--severity-high); }
+.severity-indicator.medium { background: var(--severity-medium); }
+.severity-indicator.low { background: var(--severity-low); }
+
+/* ===== PROPORTIONAL BAR ===== */
+.prop-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  gap: 2px;
+  margin: 16px 0;
+}
+
+.prop-segment {
+  border-radius: 5px;
+  transition-property: width;
+  transition-duration: 800ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.prop-legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.prop-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.prop-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* ===== PATCH STATUS ===== */
+.patch-bar-container {
+  margin-top: 16px;
+}
+
+.patch-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.patch-applied {
+  background: var(--severity-low);
+}
+
+.patch-pending {
+  background: var(--severity-medium);
+}
+
+.patch-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.patch-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ===== RANK LIST ===== */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.rank-item:last-child { border-bottom: none; }
+
+.rank-number {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--text-tertiary);
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.rank-number:first-child {
+  color: var(--text-secondary);
+}
+
+.rank-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.rank-detail {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== CVE TREND ===== */
+.cve-trend {
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  height: 80px;
+  padding-top: 8px;
+}
+
+.cve-trend-bar {
+  flex: 1;
+  background: var(--text-tertiary);
+  opacity: 0.3;
+  border-radius: 3px 3px 0 0;
+  transition-property: height, opacity;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+}
+
+.cve-trend-bar:hover { opacity: 0.6; }
+.cve-trend-bar:last-child { opacity: 0.5; }
+
+.cve-trend-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.cve-trend-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== PROTOCOL BAR ===== */
+.protocol-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.protocol-name {
+  font-size: 13px;
+  color: var(--text-primary);
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.protocol-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--progress-bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.protocol-bar-fill {
+  height: 100%;
+  background: var(--text-secondary);
+  border-radius: 3px;
+}
+
+.protocol-pct {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== CTA BUTTON ===== */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-input);
+  transition-property: background, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(.23,1,.32,1);
+  min-height: 40px;
+}
+
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:active { transform: scale(0.96); }
+
+/* ===== NETWORK EXPOSURE STATS ===== */
+.exposure-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.exposure-big {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.exposure-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.exposure-danger {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== STAGGER ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  opacity: 0;
+  animation: fadeInUp 500ms cubic-bezier(.23,1,.32,1) forwards;
+}
+
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 200ms; }
+.stagger-4 { animation-delay: 300ms; }
+.stagger-5 { animation-delay: 400ms; }
+.stagger-6 { animation-delay: 500ms; }
+.stagger-7 { animation-delay: 600ms; }
+.stagger-8 { animation-delay: 700ms; }
+
+/* ===== DISK ITEM ===== */
+.disk-item {
+  margin-bottom: 14px;
+}
+
+.disk-item:last-child { margin-bottom: 0; }
+
+.disk-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.disk-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.disk-pct {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== NETWORK IO ===== */
+.net-io-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.net-io-dir {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.net-io-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.net-io-unit {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .grid-magazine { grid-template-columns: 1fr; }
+  .grid-2col { grid-template-columns: 1fr; }
+  .span-2, .span-full { grid-column: span 1; }
+  .severity-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-strip { flex-wrap: wrap; }
+  .kpi-item { border-right: none; border-bottom: 1px solid var(--border); }
+  .hero-metric { flex-direction: column; gap: 24px; }
+  .hero-stats { flex-wrap: wrap; gap: 16px; }
+  .dashboard { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 16 16"><path d="M8 1L14 5v6l-6 4-6-4V5l6-4z"/></svg>
+      </div>
+      <span class="sidebar-brand">withVTM 4.0</span>
+    </div>
+    <nav class="sidebar-nav">
+      <!-- 모니터링 -->
+      <div class="nav-group">
+        <div class="nav-group-label">모니터링</div>
+        <a class="nav-item active" data-tab="tab-system">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+          <span class="nav-item-text">시스템 모니터링</span>
+        </a>
+        <a class="nav-item" data-tab="tab-network">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 4 5.5 4 9s-1.5 6.5-4 9"/><path d="M12 3c-2.5 2.5-4 5.5-4 9s1.5 6.5 4 9"/></svg></span>
+          <span class="nav-item-text">네트워크 노출현황</span>
+        </a>
+      </div>
+      <!-- 자산관리 -->
+      <div class="nav-group">
+        <div class="nav-group-label">자산관리</div>
+        <a class="nav-item" data-tab="tab-asset">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M20 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>
+          <span class="nav-item-text">자산 현황</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M12 20V4"/><path d="M5 12l7-8 7 8"/></svg></span>
+          <span class="nav-item-text">스캔 관리</span>
+        </a>
+      </div>
+      <!-- 보안분석 -->
+      <div class="nav-group">
+        <div class="nav-group-label">보안분석</div>
+        <a class="nav-item" data-tab="tab-vuln">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+          <span class="nav-item-text">취약점 현황</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+          <span class="nav-item-text">스캔 탐지</span>
+        </a>
+      </div>
+      <!-- 컴플라이언스 -->
+      <div class="nav-group">
+        <div class="nav-group-label">컴플라이언스</div>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+          <span class="nav-item-text">사이버보안 실태평가</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+          <span class="nav-item-text">기관정보보안감사</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span>
+          <span class="nav-item-text">정보보안감사</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg></span>
+          <span class="nav-item-text">사이버 진단의 날</span>
+        </a>
+      </div>
+      <!-- 운영 -->
+      <div class="nav-group">
+        <div class="nav-group-label">운영</div>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+          <span class="nav-item-text">교육관리</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></span>
+          <span class="nav-item-text">정보화사업 관리</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+          <span class="nav-item-text">작업 관리</span>
+        </a>
+      </div>
+      <!-- 커뮤니티 -->
+      <div class="nav-group">
+        <div class="nav-group-label">커뮤니티</div>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span class="nav-item-text">소통광장</span>
+        </a>
+      </div>
+      <!-- 관리 -->
+      <div class="nav-group">
+        <div class="nav-group-label">관리</div>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <span class="nav-item-text">보안관제</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span class="nav-item-text">환경설정</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-item-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <span class="nav-item-text">마이페이지</span>
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-toggle" id="sidebarPin" title="Pin sidebar">
+        <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" title="Search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+        <button class="topbar-btn" title="Notifications">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <button class="topbar-btn theme-toggle" id="themeToggle" title="Toggle theme">
+          <span class="sun"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
+          <span class="moon"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+        </button>
+        <div class="avatar">JK</div>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-item active" data-target="tab-system">시스템 모니터링</button>
+      <button class="tab-item" data-target="tab-asset">자산 현황</button>
+      <button class="tab-item" data-target="tab-vuln">취약점 현황</button>
+      <button class="tab-item" data-target="tab-network">네트워크 노출현황</button>
+    </div>
+
+    <!-- Dashboard Panels -->
+    <div class="dashboard">
+
+      <!-- ===== TAB 1: 시스템 모니터링 ===== -->
+      <div class="tab-panel active" id="tab-system">
+        <div class="editorial-grid grid-magazine">
+          <!-- Hero -->
+          <div class="card span-full hero-metric animate-in stagger-1">
+            <div class="hero-gauge">
+              <svg viewBox="0 0 160 160">
+                <circle class="hero-gauge-bg" cx="80" cy="80" r="65"/>
+                <circle class="hero-gauge-fill" cx="80" cy="80" r="65" data-pct="67"/>
+              </svg>
+              <div class="hero-gauge-value">
+                <span class="hero-gauge-num">67%</span>
+                <span class="hero-gauge-label">CPU</span>
+              </div>
+            </div>
+            <div class="hero-info">
+              <h1 class="section-title">시스템 모니터링</h1>
+              <p class="hero-desc">전체 인프라 시스템 상태를 실시간으로 모니터링합니다. 현재 모든 핵심 시스템이 정상 운영 중입니다.</p>
+              <div class="hero-stats">
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">Cores</span>
+                  <span class="hero-stat-value">16</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">Threads</span>
+                  <span class="hero-stat-value">32</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">Load Avg</span>
+                  <span class="hero-stat-value">2.41</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-label">Temp</span>
+                  <span class="hero-stat-value">54°C</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory -->
+          <div class="card animate-in stagger-2">
+            <div class="metric-label">메모리</div>
+            <div class="metric-value">12.4<span style="font-size:14px;color:var(--text-tertiary);font-weight:400"> / 32 GB</span></div>
+            <div class="metric-sub">사용률 38.8%</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:0%" data-width="38.8%"></div>
+            </div>
+          </div>
+
+          <!-- Disk -->
+          <div class="card animate-in stagger-3">
+            <div class="metric-label">디스크 사용량</div>
+            <div class="disk-item">
+              <div class="disk-header">
+                <span class="disk-name">/dev/sda1</span>
+                <span class="disk-pct">78%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:0%" data-width="78%"></div>
+              </div>
+            </div>
+            <div class="disk-item" style="margin-top:14px">
+              <div class="disk-header">
+                <span class="disk-name">/dev/sda2</span>
+                <span class="disk-pct">45%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:0%" data-width="45%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Network I/O -->
+          <div class="card animate-in stagger-4">
+            <div class="metric-label">네트워크 I/O</div>
+            <div class="net-io-row">
+              <span class="net-io-dir">In</span>
+              <span class="net-io-value">245 <span class="net-io-unit">Mbps</span></span>
+            </div>
+            <div class="net-io-row">
+              <span class="net-io-dir">Out</span>
+              <span class="net-io-value">128 <span class="net-io-unit">Mbps</span></span>
+            </div>
+            <div class="sparkline">
+              <div class="sparkline-bar" style="height:45%"></div>
+              <div class="sparkline-bar" style="height:62%"></div>
+              <div class="sparkline-bar" style="height:38%"></div>
+              <div class="sparkline-bar" style="height:71%"></div>
+              <div class="sparkline-bar" style="height:55%"></div>
+              <div class="sparkline-bar" style="height:48%"></div>
+              <div class="sparkline-bar" style="height:65%"></div>
+              <div class="sparkline-bar" style="height:82%"></div>
+              <div class="sparkline-bar" style="height:74%"></div>
+              <div class="sparkline-bar" style="height:58%"></div>
+              <div class="sparkline-bar" style="height:91%"></div>
+              <div class="sparkline-bar" style="height:76%"></div>
+            </div>
+          </div>
+
+          <!-- Process TOP 5 -->
+          <div class="card span-2 animate-in stagger-5">
+            <div class="card-header">
+              <h3 class="card-title">프로세스 TOP 5</h3>
+              <span class="card-subtitle">CPU 기준 정렬</span>
+            </div>
+            <table class="editorial-table">
+              <thead>
+                <tr>
+                  <th>PID</th>
+                  <th>프로세스명</th>
+                  <th>CPU</th>
+                  <th>MEM</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="mono">28341</td><td>postgres</td><td class="mono">23.4%</td><td class="mono">1.2 GB</td><td class="text-secondary">Running</td></tr>
+                <tr><td class="mono">14523</td><td>java -Xmx4g</td><td class="mono">18.7%</td><td class="mono">3.8 GB</td><td class="text-secondary">Running</td></tr>
+                <tr><td class="mono">09182</td><td>nginx worker</td><td class="mono">8.2%</td><td class="mono">256 MB</td><td class="text-secondary">Running</td></tr>
+                <tr><td class="mono">31204</td><td>redis-server</td><td class="mono">5.1%</td><td class="mono">892 MB</td><td class="text-secondary">Running</td></tr>
+                <tr><td class="mono">22817</td><td>node /app/server</td><td class="mono">4.6%</td><td class="mono">412 MB</td><td class="text-secondary">Running</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Uptime -->
+          <div class="card animate-in stagger-6" style="display:flex;flex-direction:column;justify-content:center;">
+            <div class="metric-label">업타임</div>
+            <div class="uptime-value">127<span class="uptime-unit">일</span> 14<span class="uptime-unit">시간</span></div>
+            <div class="metric-sub" style="margin-top:8px">마지막 재시작: 2025.11.20 02:14</div>
+          </div>
+
+          <!-- System Events -->
+          <div class="card span-full animate-in stagger-7">
+            <div class="card-header">
+              <h3 class="card-title">시스템 이벤트</h3>
+              <span class="card-subtitle">최근 24시간</span>
+            </div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot accent"></div><div class="timeline-line"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">14:32:18</div>
+                  <div class="timeline-text">CPU 사용률 임계치 초과</div>
+                  <div class="timeline-desc">CPU 사용률이 85%를 초과하여 경고가 발생했습니다. (서버: WEB-PRD-03)</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot warn"></div><div class="timeline-line"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">11:15:42</div>
+                  <div class="timeline-text">디스크 용량 경고</div>
+                  <div class="timeline-desc">/dev/sda1 사용률 78% — 임계치 80% 접근 중</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot ok"></div><div class="timeline-line"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">08:30:00</div>
+                  <div class="timeline-text">보안 패치 자동 적용 완료</div>
+                  <div class="timeline-desc">CVE-2025-31248 외 3건 패치 적용 성공</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot ok"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">06:00:00</div>
+                  <div class="timeline-text">일간 백업 완료</div>
+                  <div class="timeline-desc">전체 데이터베이스 백업 정상 완료 (142 GB)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 2: 자산 현황 ===== -->
+      <div class="tab-panel" id="tab-asset">
+        <div class="editorial-grid grid-magazine">
+          <div class="span-full animate-in stagger-1">
+            <h1 class="section-title">자산 현황</h1>
+            <p class="section-subtitle">전체 IT 자산의 현황과 상태를 한눈에 확인합니다.</p>
+          </div>
+
+          <!-- KPI Strip -->
+          <div class="card span-full animate-in stagger-2" style="padding:0;">
+            <div class="kpi-strip">
+              <div class="kpi-item">
+                <span class="kpi-label">총 자산</span>
+                <span class="kpi-value">1,247</span>
+              </div>
+              <div class="kpi-item">
+                <span class="kpi-label">활성</span>
+                <span class="kpi-value">892</span>
+              </div>
+              <div class="kpi-item">
+                <span class="kpi-label">비활성</span>
+                <span class="kpi-value">355</span>
+              </div>
+              <div class="kpi-item">
+                <span class="kpi-label">신규 (7일)</span>
+                <span class="kpi-value accent">23</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- OS Distribution -->
+          <div class="card animate-in stagger-3">
+            <div class="card-header">
+              <h3 class="card-title">OS 분포</h3>
+            </div>
+            <div class="hbar-list">
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">CentOS 7</span><span class="hbar-value">342</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="45%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">Ubuntu 22.04</span><span class="hbar-value">287</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="38%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">Windows Server 2022</span><span class="hbar-value">198</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="26%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">RHEL 9</span><span class="hbar-value">156</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="21%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">기타</span><span class="hbar-value">264</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="35%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone Distribution -->
+          <div class="card animate-in stagger-4">
+            <div class="card-header">
+              <h3 class="card-title">Zone 분포</h3>
+            </div>
+            <div class="prop-bar">
+              <div class="prop-segment" style="width:0%;background:var(--text-secondary)" data-width="38%"></div>
+              <div class="prop-segment" style="width:0%;background:var(--text-tertiary)" data-width="25%"></div>
+              <div class="prop-segment" style="width:0%;background:var(--border)" data-width="22%"></div>
+              <div class="prop-segment" style="width:0%;background:var(--chart-line)" data-width="15%"></div>
+            </div>
+            <div class="prop-legend">
+              <div class="prop-legend-item"><div class="prop-legend-dot" style="background:var(--text-secondary)"></div>DMZ — 474</div>
+              <div class="prop-legend-item"><div class="prop-legend-dot" style="background:var(--text-tertiary)"></div>Internal — 312</div>
+              <div class="prop-legend-item"><div class="prop-legend-dot" style="background:var(--border)"></div>Server — 274</div>
+              <div class="prop-legend-item"><div class="prop-legend-dot" style="background:var(--chart-line)"></div>Cloud — 187</div>
+            </div>
+            <div style="margin-top:24px">
+              <div class="hbar-list">
+                <div class="hbar-item">
+                  <div class="hbar-header"><span class="hbar-label">DMZ</span><span class="hbar-value">474</span></div>
+                  <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="38%"></div></div>
+                </div>
+                <div class="hbar-item">
+                  <div class="hbar-header"><span class="hbar-label">Internal</span><span class="hbar-value">312</span></div>
+                  <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="25%"></div></div>
+                </div>
+                <div class="hbar-item">
+                  <div class="hbar-header"><span class="hbar-label">Server</span><span class="hbar-value">274</span></div>
+                  <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="22%"></div></div>
+                </div>
+                <div class="hbar-item">
+                  <div class="hbar-header"><span class="hbar-label">Cloud</span><span class="hbar-value">187</span></div>
+                  <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="15%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recently Registered Assets -->
+          <div class="card animate-in stagger-5">
+            <div class="card-header">
+              <h3 class="card-title">최근 등록 자산</h3>
+              <span class="card-subtitle">최근 7일</span>
+            </div>
+            <table class="editorial-table">
+              <thead>
+                <tr>
+                  <th>자산명</th>
+                  <th>IP</th>
+                  <th>등록일</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>WEB-PRD-15</td><td class="mono">10.0.1.115</td><td class="mono text-secondary">03.26</td></tr>
+                <tr><td>DB-STG-04</td><td class="mono">10.0.2.204</td><td class="mono text-secondary">03.25</td></tr>
+                <tr><td>API-PRD-08</td><td class="mono">10.0.1.208</td><td class="mono text-secondary">03.24</td></tr>
+                <tr><td>MON-PRD-02</td><td class="mono">10.0.3.102</td><td class="mono text-secondary">03.23</td></tr>
+                <tr><td>CACHE-PRD-03</td><td class="mono">10.0.1.303</td><td class="mono text-secondary">03.22</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 3: 취약점 현황 ===== -->
+      <div class="tab-panel" id="tab-vuln">
+        <div class="editorial-grid grid-magazine">
+          <div class="span-full animate-in stagger-1">
+            <h1 class="section-title">취약점 현황</h1>
+            <p class="section-subtitle">CVE/CCE 기반 취약점 탐지 및 패치 관리 현황</p>
+          </div>
+
+          <!-- Severity Cards -->
+          <div class="span-full animate-in stagger-2">
+            <div class="severity-grid">
+              <div class="severity-card">
+                <span class="severity-label">심각 Critical</span>
+                <span class="severity-value critical">127</span>
+                <div class="severity-indicator critical"></div>
+              </div>
+              <div class="severity-card">
+                <span class="severity-label">높음 High</span>
+                <span class="severity-value high">384</span>
+                <div class="severity-indicator high"></div>
+              </div>
+              <div class="severity-card">
+                <span class="severity-label">중간 Medium</span>
+                <span class="severity-value medium">1,203</span>
+                <div class="severity-indicator medium"></div>
+              </div>
+              <div class="severity-card">
+                <span class="severity-label">낮음 Low</span>
+                <span class="severity-value low">2,177</span>
+                <div class="severity-indicator low"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CVE Trend -->
+          <div class="card span-2 animate-in stagger-3">
+            <div class="card-header">
+              <h3 class="card-title">CVE 트렌드</h3>
+              <span class="card-subtitle">최근 12개월</span>
+            </div>
+            <div class="cve-trend">
+              <div class="cve-trend-bar" style="height:35%"></div>
+              <div class="cve-trend-bar" style="height:42%"></div>
+              <div class="cve-trend-bar" style="height:38%"></div>
+              <div class="cve-trend-bar" style="height:55%"></div>
+              <div class="cve-trend-bar" style="height:48%"></div>
+              <div class="cve-trend-bar" style="height:62%"></div>
+              <div class="cve-trend-bar" style="height:71%"></div>
+              <div class="cve-trend-bar" style="height:58%"></div>
+              <div class="cve-trend-bar" style="height:45%"></div>
+              <div class="cve-trend-bar" style="height:82%"></div>
+              <div class="cve-trend-bar" style="height:75%"></div>
+              <div class="cve-trend-bar" style="height:90%"></div>
+            </div>
+            <div class="cve-trend-labels">
+              <span class="cve-trend-label">Apr</span>
+              <span class="cve-trend-label">Jun</span>
+              <span class="cve-trend-label">Aug</span>
+              <span class="cve-trend-label">Oct</span>
+              <span class="cve-trend-label">Dec</span>
+              <span class="cve-trend-label">Mar</span>
+            </div>
+          </div>
+
+          <!-- Patch Status -->
+          <div class="card animate-in stagger-4">
+            <div class="card-header">
+              <h3 class="card-title">패치 현황</h3>
+            </div>
+            <div style="text-align:center;margin-bottom:16px;">
+              <span class="metric-value" style="font-size:36px">68<span style="font-size:18px;color:var(--text-tertiary)">%</span></span>
+              <div class="metric-sub">패치 적용률</div>
+            </div>
+            <div class="patch-bar-container">
+              <div class="patch-bar">
+                <div class="patch-applied" style="width:68%"></div>
+                <div class="patch-pending" style="width:32%"></div>
+              </div>
+              <div class="patch-labels">
+                <span class="patch-label">적용 68%</span>
+                <span class="patch-label">미적용 32%</span>
+              </div>
+            </div>
+            <div style="margin-top:20px;">
+              <button class="btn-primary" style="width:100%;justify-content:center;">패치 실행</button>
+            </div>
+          </div>
+
+          <!-- Top Vulnerable Assets -->
+          <div class="card span-2 animate-in stagger-5">
+            <div class="card-header">
+              <h3 class="card-title">Top 취약 자산</h3>
+              <span class="card-subtitle">취약점 수 기준</span>
+            </div>
+            <div class="rank-list">
+              <div class="rank-item">
+                <span class="rank-number">1</span>
+                <div class="rank-info">
+                  <div class="rank-name">WEB-PRD-03</div>
+                  <div class="rank-detail">10.0.1.103 / CentOS 7</div>
+                </div>
+                <span class="rank-value">47</span>
+              </div>
+              <div class="rank-item">
+                <span class="rank-number">2</span>
+                <div class="rank-info">
+                  <div class="rank-name">DB-PRD-01</div>
+                  <div class="rank-detail">10.0.2.101 / Ubuntu 22.04</div>
+                </div>
+                <span class="rank-value">38</span>
+              </div>
+              <div class="rank-item">
+                <span class="rank-number">3</span>
+                <div class="rank-info">
+                  <div class="rank-name">API-PRD-05</div>
+                  <div class="rank-detail">10.0.1.205 / RHEL 9</div>
+                </div>
+                <span class="rank-value">31</span>
+              </div>
+              <div class="rank-item">
+                <span class="rank-number">4</span>
+                <div class="rank-info">
+                  <div class="rank-name">LEGACY-APP-02</div>
+                  <div class="rank-detail">10.0.4.102 / Windows Server 2019</div>
+                </div>
+                <span class="rank-value">28</span>
+              </div>
+              <div class="rank-item">
+                <span class="rank-number">5</span>
+                <div class="rank-info">
+                  <div class="rank-name">MQ-PRD-01</div>
+                  <div class="rank-detail">10.0.2.301 / CentOS 7</div>
+                </div>
+                <span class="rank-value">24</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent CVEs -->
+          <div class="card animate-in stagger-6">
+            <div class="card-header">
+              <h3 class="card-title">최근 CVE</h3>
+            </div>
+            <div class="rank-list">
+              <div class="rank-item" style="border-bottom-color:var(--border-subtle)">
+                <div class="rank-info">
+                  <div class="rank-name" style="font-family:'IBM Plex Mono',monospace;font-size:12px">CVE-2026-1847</div>
+                  <div class="rank-detail">OpenSSL Buffer Overflow</div>
+                </div>
+                <span class="severity-value critical" style="font-size:12px;font-weight:600">심각</span>
+              </div>
+              <div class="rank-item" style="border-bottom-color:var(--border-subtle)">
+                <div class="rank-info">
+                  <div class="rank-name" style="font-family:'IBM Plex Mono',monospace;font-size:12px">CVE-2026-1623</div>
+                  <div class="rank-detail">Apache Struts RCE</div>
+                </div>
+                <span style="font-size:12px;font-weight:600;color:var(--severity-high)">높음</span>
+              </div>
+              <div class="rank-item" style="border-bottom-color:var(--border-subtle)">
+                <div class="rank-info">
+                  <div class="rank-name" style="font-family:'IBM Plex Mono',monospace;font-size:12px">CVE-2026-1589</div>
+                  <div class="rank-detail">Linux Kernel Privilege Escalation</div>
+                </div>
+                <span style="font-size:12px;font-weight:600;color:var(--severity-high)">높음</span>
+              </div>
+              <div class="rank-item">
+                <div class="rank-info">
+                  <div class="rank-name" style="font-family:'IBM Plex Mono',monospace;font-size:12px">CVE-2026-1402</div>
+                  <div class="rank-detail">Nginx Integer Overflow</div>
+                </div>
+                <span style="font-size:12px;font-weight:600;color:var(--severity-medium)">중간</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 4: 네트워크 노출현황 ===== -->
+      <div class="tab-panel" id="tab-network">
+        <div class="editorial-grid grid-magazine">
+          <div class="span-full animate-in stagger-1">
+            <h1 class="section-title">네트워크 노출현황</h1>
+            <p class="section-subtitle">외부 노출 포트, 서비스 및 접속 현황을 모니터링합니다.</p>
+          </div>
+
+          <!-- Exposure Stats -->
+          <div class="card animate-in stagger-2">
+            <div class="metric-label">노출 포트</div>
+            <div class="exposure-stat">
+              <span class="exposure-big">342</span>
+              <span class="exposure-label">total</span>
+            </div>
+            <div style="margin-top:12px;display:flex;align-items:baseline;gap:6px">
+              <span class="exposure-danger">28</span>
+              <span style="font-size:13px;color:var(--text-secondary)">위험 포트</span>
+            </div>
+            <div class="progress-bar" style="margin-top:16px">
+              <div class="progress-fill accent" style="width:0%" data-width="8.2%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-top:6px">위험 포트 비율 8.2%</div>
+          </div>
+
+          <!-- Protocol -->
+          <div class="card animate-in stagger-3">
+            <div class="card-header">
+              <h3 class="card-title">프로토콜 분포</h3>
+            </div>
+            <div style="margin-top:8px">
+              <div class="protocol-row">
+                <span class="protocol-name">TCP</span>
+                <div class="protocol-bar-track"><div class="protocol-bar-fill" style="width:89%"></div></div>
+                <span class="protocol-pct">89%</span>
+              </div>
+              <div class="protocol-row">
+                <span class="protocol-name">UDP</span>
+                <div class="protocol-bar-track"><div class="protocol-bar-fill" style="width:8%"></div></div>
+                <span class="protocol-pct">8%</span>
+              </div>
+              <div class="protocol-row">
+                <span class="protocol-name">Other</span>
+                <div class="protocol-bar-track"><div class="protocol-bar-fill" style="width:3%"></div></div>
+                <span class="protocol-pct">3%</span>
+              </div>
+            </div>
+            <div class="prop-bar" style="margin-top:20px">
+              <div class="prop-segment" style="width:89%;background:var(--text-secondary)"></div>
+              <div class="prop-segment" style="width:8%;background:var(--text-tertiary)"></div>
+              <div class="prop-segment" style="width:3%;background:var(--border)"></div>
+            </div>
+          </div>
+
+          <!-- Regional Access -->
+          <div class="card animate-in stagger-4">
+            <div class="card-header">
+              <h3 class="card-title">지역별 접속</h3>
+              <span class="card-subtitle">최근 24시간</span>
+            </div>
+            <div class="hbar-list">
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">대한민국</span><span class="hbar-value">12,487</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="85%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">미국</span><span class="hbar-value">2,341</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="32%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">중국</span><span class="hbar-value">1,892</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="26%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">일본</span><span class="hbar-value">743</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="10%"></div></div>
+              </div>
+              <div class="hbar-item">
+                <div class="hbar-header"><span class="hbar-label">러시아</span><span class="hbar-value">412</span></div>
+                <div class="hbar-track"><div class="hbar-fill" style="width:0%" data-width="6%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- External Exposed Services -->
+          <div class="card span-2 animate-in stagger-5">
+            <div class="card-header">
+              <h3 class="card-title">외부 노출 서비스</h3>
+              <span class="card-subtitle">인터넷 직접 접근 가능</span>
+            </div>
+            <table class="editorial-table">
+              <thead>
+                <tr>
+                  <th>서비스</th>
+                  <th>포트</th>
+                  <th>IP</th>
+                  <th>상태</th>
+                  <th>위험도</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>HTTPS</td>
+                  <td class="mono">443</td>
+                  <td class="mono">203.0.113.10</td>
+                  <td class="text-secondary">Active</td>
+                  <td style="color:var(--severity-low)">낮음</td>
+                </tr>
+                <tr>
+                  <td>HTTP</td>
+                  <td class="mono">80</td>
+                  <td class="mono">203.0.113.10</td>
+                  <td class="text-secondary">Active</td>
+                  <td style="color:var(--severity-medium)">중간</td>
+                </tr>
+                <tr>
+                  <td>SSH</td>
+                  <td class="mono">22</td>
+                  <td class="mono">203.0.113.15</td>
+                  <td class="text-secondary">Active</td>
+                  <td style="color:var(--severity-high)">높음</td>
+                </tr>
+                <tr>
+                  <td>FTP</td>
+                  <td class="mono">21</td>
+                  <td class="mono">203.0.113.20</td>
+                  <td class="text-secondary">Active</td>
+                  <td style="color:var(--accent)">심각</td>
+                </tr>
+                <tr>
+                  <td>RDP</td>
+                  <td class="mono">3389</td>
+                  <td class="mono">203.0.113.25</td>
+                  <td class="text-secondary">Active</td>
+                  <td style="color:var(--accent)">심각</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Recent Detection Events -->
+          <div class="card animate-in stagger-6">
+            <div class="card-header">
+              <h3 class="card-title">최근 탐지 이벤트</h3>
+            </div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot accent"></div><div class="timeline-line"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">15:42:31</div>
+                  <div class="timeline-text">포트 스캔 탐지</div>
+                  <div class="timeline-desc">출발지: 185.220.101.42</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot warn"></div><div class="timeline-line"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">14:18:05</div>
+                  <div class="timeline-text">비인가 SSH 접근 시도</div>
+                  <div class="timeline-desc">대상: 203.0.113.15:22</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot warn"></div><div class="timeline-line"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">12:55:19</div>
+                  <div class="timeline-text">DDoS 패턴 감지</div>
+                  <div class="timeline-desc">SYN Flood — 자동 차단</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot-col"><div class="timeline-dot ok"></div></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">09:30:00</div>
+                  <div class="timeline-text">방화벽 룰 업데이트</div>
+                  <div class="timeline-desc">12건 신규 차단 룰 적용</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dashboard -->
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<script>
+(function() {
+  'use strict';
+
+  // ===== Theme Toggle =====
+  const html = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+
+  themeToggle.addEventListener('click', function() {
+    const current = html.getAttribute('data-theme');
+    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  });
+
+  // ===== Sidebar Pin =====
+  const sidebar = document.getElementById('sidebar');
+  const pinBtn = document.getElementById('sidebarPin');
+
+  pinBtn.addEventListener('click', function() {
+    sidebar.classList.toggle('pinned');
+    const icon = pinBtn.querySelector('svg');
+    if (sidebar.classList.contains('pinned')) {
+      icon.innerHTML = '<path d="M15 18l-6-6 6-6"/>';
+    } else {
+      icon.innerHTML = '<path d="M9 18l6-6-6-6"/>';
+    }
+  });
+
+  // ===== Tab Switching =====
+  const tabBtns = document.querySelectorAll('.tab-item');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+  const navItems = document.querySelectorAll('.nav-item[data-tab]');
+
+  function switchTab(targetId) {
+    // Update tab buttons
+    tabBtns.forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-target') === targetId);
+    });
+
+    // Update panels
+    tabPanels.forEach(function(panel) {
+      panel.classList.toggle('active', panel.id === targetId);
+    });
+
+    // Update nav items
+    navItems.forEach(function(nav) {
+      nav.classList.toggle('active', nav.getAttribute('data-tab') === targetId);
+    });
+
+    // Re-trigger animations for newly visible panel
+    var activePanel = document.getElementById(targetId);
+    if (activePanel) {
+      triggerAnimations(activePanel);
+    }
+  }
+
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      switchTab(this.getAttribute('data-target'));
+    });
+  });
+
+  navItems.forEach(function(nav) {
+    nav.addEventListener('click', function(e) {
+      e.preventDefault();
+      var tab = this.getAttribute('data-tab');
+      if (tab) switchTab(tab);
+    });
+  });
+
+  // ===== Animations =====
+  function triggerAnimations(container) {
+    var items = container.querySelectorAll('.animate-in');
+    items.forEach(function(el) {
+      el.style.animation = 'none';
+      el.offsetHeight; // reflow
+      el.style.animation = '';
+    });
+
+    // Animate progress bars and horizontal bars
+    setTimeout(function() {
+      container.querySelectorAll('[data-width]').forEach(function(el) {
+        el.style.width = el.getAttribute('data-width');
+      });
+
+      // Animate gauge
+      container.querySelectorAll('[data-pct]').forEach(function(el) {
+        var pct = parseFloat(el.getAttribute('data-pct'));
+        var circumference = 2 * Math.PI * 65; // r=65
+        var offset = circumference - (pct / 100) * circumference;
+        el.style.strokeDashoffset = offset;
+      });
+    }, 200);
+  }
+
+  // Initial animations
+  triggerAnimations(document.getElementById('tab-system'));
+
+})();
+</script>
+
+</body>
+</html>

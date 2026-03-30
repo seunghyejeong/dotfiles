@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#05080f">
+<title>VTM Chart Reference</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<style>
+/* ── VTM Design Tokens ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  color-scheme: dark;
+  --bg:    #05080f;
+  --s1:    #0a0f1c;
+  --s2:    #101724;
+  --s3:    #172030;
+  --bd:    #1a2844;
+  --bd2:   #263a5e;
+  --txt:   #f2f6ff;
+  --txt2:  #b0c2dc;
+  --txt3:  #6a7fa0;
+  --acc:   #3b8fff;
+  --acc-dim: rgba(59,143,255,.08);
+  --acc-mid: rgba(59,143,255,.18);
+  --crit:  #ff3858;
+  --high:  #ffa21e;
+  --med:   #18b0ff;
+  --low:   #00dc7e;
+  --crit-bg: rgba(255,56,88,.14);
+  --high-bg: rgba(255,162,30,.14);
+  --med-bg:  rgba(24,176,255,.14);
+  --low-bg:  rgba(0,220,126,.14);
+  --brand:    #ff5a10;
+  --brand-bg: rgba(255,90,16,.14);
+  --plex:  'IBM Plex Sans', system-ui, sans-serif;
+  --mono:  'IBM Plex Mono', 'SF Mono', monospace;
+  --shadow:    0 1px 4px rgba(0,0,0,.5);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,.55);
+  --ease:      cubic-bezier(.23,1,.32,1);
+}
+
+html.light {
+  color-scheme: light;
+  --bg:    #f3f5f9;
+  --s1:    #ffffff;
+  --s2:    #ebeef5;
+  --s3:    #dce1eb;
+  --bd:    #bcc5d5;
+  --bd2:   #8595ad;
+  --txt:   #0a1228;
+  --txt2:  #283850;
+  --txt3:  #506278;
+  --acc:   #1a6dff;
+  --acc-dim: rgba(26,109,255,.06);
+  --acc-mid: rgba(26,109,255,.14);
+  --crit:  #d91530;
+  --high:  #c76a00;
+  --med:   #0072b5;
+  --low:   #008a55;
+  --crit-bg: rgba(217,21,48,.10);
+  --high-bg: rgba(199,106,0,.10);
+  --med-bg:  rgba(0,114,181,.10);
+  --low-bg:  rgba(0,138,85,.10);
+  --brand:    #d84a08;
+  --brand-bg: rgba(216,74,8,.12);
+  --shadow:    0 1px 3px rgba(10,18,40,.08), 0 1px 2px rgba(10,18,40,.05);
+  --shadow-lg: 0 4px 16px rgba(10,18,40,.10), 0 1px 3px rgba(10,18,40,.07);
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--plex);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+.page-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 28px 64px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.page-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.page-header-sub {
+  font: 11px var(--mono);
+  color: var(--txt3);
+  margin-top: 4px;
+}
+
+/* ── Theme Toggle ── */
+.theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--s2);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  cursor: pointer;
+  font: 11px var(--mono);
+  color: var(--txt2);
+  letter-spacing: .5px;
+  transition: background .15s;
+  min-height: 44px;
+}
+.theme-btn:hover { background: var(--s3); }
+.theme-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--acc); }
+
+/* ── Section ── */
+.section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt);
+  margin-bottom: 4px;
+}
+
+.section-desc {
+  font-size: 11px;
+  color: var(--txt3);
+  margin-bottom: 16px;
+}
+
+/* ── Chart Grid ── */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.chart-grid.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chart-grid.cols-1 {
+  grid-template-columns: 1fr;
+}
+
+/* ── Panel (Chart Card) ── */
+.panel {
+  background: var(--s1);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.phead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.phead-t {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.phead-m {
+  font-size: 10px;
+  color: var(--txt3);
+  font-family: var(--mono);
+}
+
+.pbody {
+  padding: 16px 20px;
+  position: relative;
+}
+
+.chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.chart-wrap canvas {
+  width: 100% !important;
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: .02em;
+}
+
+.badge-acc { background: var(--acc-mid); color: var(--acc); }
+.badge-crit { background: var(--crit-bg); color: var(--crit); }
+.badge-high { background: var(--high-bg); color: var(--high); }
+.badge-med { background: var(--med-bg); color: var(--med); }
+.badge-low { background: var(--low-bg); color: var(--low); }
+
+/* ── Color Palette Display ── */
+.palette-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.palette-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.palette-swatch {
+  width: 40px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--bd);
+}
+
+.palette-label {
+  font: 9px var(--mono);
+  color: var(--txt3);
+}
+
+/* ── Code Block ── */
+.code-note {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--s2);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  font: 10px/1.6 var(--mono);
+  color: var(--txt3);
+  white-space: pre-wrap;
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: var(--bd);
+  margin: 32px 0;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 3px; }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+@media (max-width: 900px) {
+  .chart-grid, .chart-grid.cols-3 { grid-template-columns: 1fr; }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="page-wrap">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>VTM Chart Reference</h1>
+      <div class="page-header-sub">Chart.js 4.5 / withadmin Design System / 14 chart types</div>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+      <span id="theme-label">LIGHT</span>
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 0. Color Palette Reference -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Color Palette</div>
+    <div class="section-desc">VTM severity scale + accent. All chart colors derive from these tokens.</div>
+    <div class="panel">
+      <div class="pbody">
+        <div class="palette-row">
+          <div class="palette-chip"><div class="palette-swatch" style="background:#3b8fff"></div><div class="palette-label">--acc</div></div>
+          <div class="palette-chip"><div class="palette-swatch" style="background:#ff3858"></div><div class="palette-label">--crit</div></div>
+          <div class="palette-chip"><div class="palette-swatch" style="background:#ffa21e"></div><div class="palette-label">--high</div></div>
+          <div class="palette-chip"><div class="palette-swatch" style="background:#18b0ff"></div><div class="palette-label">--med</div></div>
+          <div class="palette-chip"><div class="palette-swatch" style="background:#00dc7e"></div><div class="palette-label">--low</div></div>
+          <div class="palette-chip"><div class="palette-swatch" style="background:#ff5a10"></div><div class="palette-label">--brand</div></div>
+          <div class="palette-chip"><div class="palette-swatch" style="background:#6a7fa0"></div><div class="palette-label">--txt3</div></div>
+        </div>
+        <div class="code-note">const COLORS = { acc:'#3b8fff', crit:'#ff3858', high:'#ffa21e', med:'#18b0ff', low:'#00dc7e', brand:'#ff5a10' };</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 1. Bar Charts -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Bar Charts</div>
+    <div class="section-desc">기본 수직 바, 수평 바, 스택 바, 그룹 바</div>
+    <div class="chart-grid">
+      <!-- 1-1 Vertical Bar -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Vertical Bar</span>
+          <span class="badge badge-acc">기본</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="barVertical"></canvas></div></div>
+      </div>
+      <!-- 1-2 Horizontal Bar -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Horizontal Bar</span>
+          <span class="phead-m">indexAxis: 'y'</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="barHorizontal"></canvas></div></div>
+      </div>
+      <!-- 1-3 Stacked Bar -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Stacked Bar</span>
+          <span class="phead-m">stacked: true</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="barStacked"></canvas></div></div>
+      </div>
+      <!-- 1-4 Grouped Bar -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Grouped Bar</span>
+          <span class="phead-m">multi-dataset</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="barGrouped"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 2. Line Charts -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Line Charts</div>
+    <div class="section-desc">기본 라인, 곡선 라인, 영역(area), 멀티 라인</div>
+    <div class="chart-grid">
+      <!-- 2-1 Basic Line -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Basic Line</span>
+          <span class="badge badge-acc">기본</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="lineBasic"></canvas></div></div>
+      </div>
+      <!-- 2-2 Curved / Smooth Line -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Smooth Line</span>
+          <span class="phead-m">tension: 0.4</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="lineSmooth"></canvas></div></div>
+      </div>
+      <!-- 2-3 Area Chart -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Area Chart</span>
+          <span class="phead-m">fill: true</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="lineArea"></canvas></div></div>
+      </div>
+      <!-- 2-4 Multi Line -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Multi Line</span>
+          <span class="phead-m">severity trend</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="lineMulti"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 3. Doughnut / Pie -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Doughnut / Pie</div>
+    <div class="section-desc">도넛, 파이, 반도넛 (게이지)</div>
+    <div class="chart-grid cols-3">
+      <!-- 3-1 Doughnut -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Doughnut</span>
+          <span class="badge badge-acc">기본</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap" style="max-width:260px;margin:0 auto"><canvas id="doughnut"></canvas></div></div>
+      </div>
+      <!-- 3-2 Pie -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Pie</span>
+          <span class="phead-m">cutout: 0</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap" style="max-width:260px;margin:0 auto"><canvas id="pie"></canvas></div></div>
+      </div>
+      <!-- 3-3 Half Doughnut / Gauge -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Half Doughnut (Gauge)</span>
+          <span class="phead-m">circumference: 180</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap" style="max-width:260px;margin:0 auto"><canvas id="gauge"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 4. Radar / Polar -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Radar / Polar Area</div>
+    <div class="section-desc">레이더 차트 (다축 비교), 극좌표 차트</div>
+    <div class="chart-grid">
+      <!-- 4-1 Radar -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Radar</span>
+          <span class="phead-m">보안 점수 비교</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap" style="max-width:340px;margin:0 auto"><canvas id="radar"></canvas></div></div>
+      </div>
+      <!-- 4-2 Polar Area -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Polar Area</span>
+          <span class="phead-m">카테고리별 분포</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap" style="max-width:300px;margin:0 auto"><canvas id="polar"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 5. Scatter / Bubble -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Scatter / Bubble</div>
+    <div class="section-desc">산점도 (2변수), 버블 차트 (3변수)</div>
+    <div class="chart-grid">
+      <!-- 5-1 Scatter -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Scatter</span>
+          <span class="phead-m">CVSS vs EPSS</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="scatter"></canvas></div></div>
+      </div>
+      <!-- 5-2 Bubble -->
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Bubble</span>
+          <span class="phead-m">영향도 x 위험도 x 자산수</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="bubble"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 6. Mixed Chart -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Mixed Chart</div>
+    <div class="section-desc">바 + 라인 복합 차트 (이중 축)</div>
+    <div class="chart-grid cols-1">
+      <div class="panel">
+        <div class="phead">
+          <span class="phead-t">Bar + Line (Dual Axis)</span>
+          <span class="phead-m">취약점 건수 + 해결률</span>
+        </div>
+        <div class="pbody"><div class="chart-wrap"><canvas id="mixed"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- 7. Usage Notes -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Chart.js Configuration Notes</div>
+    <div class="panel">
+      <div class="pbody">
+        <div class="code-note">// VTM 공통 설정
+Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+Chart.defaults.color = '#6a7fa0';           // --txt3
+Chart.defaults.borderColor = '#1a2844';     // --bd
+
+// 반응형 (모든 차트에 적용)
+options: { responsive: true, maintainAspectRatio: true }
+
+// 툴팁 통일
+plugins: {
+  tooltip: {
+    backgroundColor: '#0a0f1c',             // --s1
+    titleColor: '#f2f6ff',                  // --txt
+    bodyColor: '#b0c2dc',                   // --txt2
+    borderColor: '#1a2844',                 // --bd
+    borderWidth: 1,
+    cornerRadius: 6,
+    padding: 10,
+    titleFont: { weight: '600' },
+    bodyFont: { family: "'IBM Plex Mono', monospace", size: 11 },
+    displayColors: true,
+    boxPadding: 4
+  }
+}
+
+// severity 색상 배열 (순서: Critical, High, Medium, Low)
+const SEV_COLORS = ['#ff3858', '#ffa21e', '#18b0ff', '#00dc7e'];
+const SEV_BG     = ['rgba(255,56,88,.14)', 'rgba(255,162,30,.14)', 'rgba(24,176,255,.14)', 'rgba(0,220,126,.14)'];</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Theme Toggle ──
+function toggleTheme() {
+  document.documentElement.classList.toggle('light');
+  const isLight = document.documentElement.classList.contains('light');
+  document.getElementById('theme-label').textContent = isLight ? 'DARK' : 'LIGHT';
+  document.getElementById('theme-icon').innerHTML = isLight
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>';
+  updateChartsTheme();
+}
+
+// ── Color System ──
+function getThemeColors() {
+  const isLight = document.documentElement.classList.contains('light');
+  return {
+    txt: isLight ? '#0a1228' : '#f2f6ff',
+    txt2: isLight ? '#283850' : '#b0c2dc',
+    txt3: isLight ? '#506278' : '#6a7fa0',
+    bd: isLight ? '#bcc5d5' : '#1a2844',
+    s1: isLight ? '#ffffff' : '#0a0f1c',
+    s2: isLight ? '#ebeef5' : '#101724',
+    acc: isLight ? '#1a6dff' : '#3b8fff',
+    crit: isLight ? '#d91530' : '#ff3858',
+    high: isLight ? '#c76a00' : '#ffa21e',
+    med: isLight ? '#0072b5' : '#18b0ff',
+    low: isLight ? '#008a55' : '#00dc7e',
+    brand: isLight ? '#d84a08' : '#ff5a10',
+  };
+}
+
+// ── Chart.js Defaults ──
+const C = getThemeColors();
+Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = C.txt3;
+Chart.defaults.borderColor = C.bd;
+
+const tooltipStyle = () => {
+  const c = getThemeColors();
+  return {
+    backgroundColor: c.s1,
+    titleColor: c.txt,
+    bodyColor: c.txt2,
+    borderColor: c.bd,
+    borderWidth: 1,
+    cornerRadius: 6,
+    padding: 10,
+    titleFont: { weight: '600', size: 12 },
+    bodyFont: { family: "'IBM Plex Mono', monospace", size: 11 },
+    displayColors: true,
+    boxPadding: 4,
+  };
+};
+
+const gridStyle = () => {
+  const c = getThemeColors();
+  return { color: c.bd, drawBorder: false };
+};
+
+const tickStyle = () => {
+  const c = getThemeColors();
+  return { color: c.txt3, font: { size: 10, family: "'IBM Plex Mono', monospace" } };
+};
+
+const legendStyle = () => {
+  const c = getThemeColors();
+  return {
+    labels: {
+      color: c.txt2,
+      font: { size: 11 },
+      boxWidth: 12,
+      boxHeight: 12,
+      borderRadius: 3,
+      padding: 12,
+      usePointStyle: true,
+      pointStyle: 'rectRounded'
+    }
+  };
+};
+
+// ── Sample Data ──
+const MONTHS = ['1월','2월','3월','4월','5월','6월'];
+const SERVERS = ['Web-01','Web-02','DB-01','API-01','Auth-01'];
+
+// Store all chart instances
+const charts = {};
+
+// ════════════════════════════════════════════════
+// 1. BAR CHARTS
+// ════════════════════════════════════════════════
+
+// 1-1 Vertical Bar
+charts.barVertical = new Chart(document.getElementById('barVertical'), {
+  type: 'bar',
+  data: {
+    labels: SERVERS,
+    datasets: [{
+      label: '취약점 수',
+      data: [45, 32, 58, 21, 37],
+      backgroundColor: [C.crit, C.high, C.crit, C.low, C.high],
+      borderRadius: 4,
+      borderSkipped: false,
+      barPercentage: 0.6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: tickStyle() },
+      y: { grid: gridStyle(), ticks: tickStyle(), beginAtZero: true }
+    }
+  }
+});
+
+// 1-2 Horizontal Bar
+charts.barHorizontal = new Chart(document.getElementById('barHorizontal'), {
+  type: 'bar',
+  data: {
+    labels: ['RCE','XSS','SQLi','SSRF','Path Traversal'],
+    datasets: [{
+      label: '건수',
+      data: [23, 45, 38, 12, 8],
+      backgroundColor: C.acc,
+      borderRadius: 4,
+      borderSkipped: false,
+      barPercentage: 0.55,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: { display: false } },
+    scales: {
+      x: { grid: gridStyle(), ticks: tickStyle(), beginAtZero: true },
+      y: { grid: { display: false }, ticks: tickStyle() }
+    }
+  }
+});
+
+// 1-3 Stacked Bar
+charts.barStacked = new Chart(document.getElementById('barStacked'), {
+  type: 'bar',
+  data: {
+    labels: MONTHS,
+    datasets: [
+      { label: 'Critical', data: [12, 15, 8, 10, 7, 5], backgroundColor: C.crit, borderRadius: { topLeft: 0, topRight: 0 }, barPercentage: 0.5 },
+      { label: 'High',     data: [20, 18, 25, 22, 15, 12], backgroundColor: C.high, barPercentage: 0.5 },
+      { label: 'Medium',   data: [35, 30, 28, 32, 25, 20], backgroundColor: C.med, barPercentage: 0.5 },
+      { label: 'Low',      data: [15, 20, 18, 12, 22, 28], backgroundColor: C.low, borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: false, barPercentage: 0.5 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: legendStyle() },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: tickStyle() },
+      y: { stacked: true, grid: gridStyle(), ticks: tickStyle(), beginAtZero: true }
+    }
+  }
+});
+
+// 1-4 Grouped Bar
+charts.barGrouped = new Chart(document.getElementById('barGrouped'), {
+  type: 'bar',
+  data: {
+    labels: MONTHS,
+    datasets: [
+      { label: '신규 발견', data: [40, 35, 50, 42, 30, 25], backgroundColor: C.crit, borderRadius: 4, borderSkipped: false, barPercentage: 0.7, categoryPercentage: 0.6 },
+      { label: '해결 완료', data: [30, 28, 45, 38, 35, 32], backgroundColor: C.low, borderRadius: 4, borderSkipped: false, barPercentage: 0.7, categoryPercentage: 0.6 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: legendStyle() },
+    scales: {
+      x: { grid: { display: false }, ticks: tickStyle() },
+      y: { grid: gridStyle(), ticks: tickStyle(), beginAtZero: true }
+    }
+  }
+});
+
+// ════════════════════════════════════════════════
+// 2. LINE CHARTS
+// ════════════════════════════════════════════════
+
+// 2-1 Basic Line
+charts.lineBasic = new Chart(document.getElementById('lineBasic'), {
+  type: 'line',
+  data: {
+    labels: MONTHS,
+    datasets: [{
+      label: '총 취약점',
+      data: [82, 78, 95, 86, 72, 65],
+      borderColor: C.acc,
+      backgroundColor: C.acc,
+      borderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: C.acc,
+      pointBorderColor: C.s1,
+      pointBorderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: tickStyle() },
+      y: { grid: gridStyle(), ticks: tickStyle() }
+    }
+  }
+});
+
+// 2-2 Smooth Line
+charts.lineSmooth = new Chart(document.getElementById('lineSmooth'), {
+  type: 'line',
+  data: {
+    labels: MONTHS,
+    datasets: [{
+      label: '위험 점수',
+      data: [72, 68, 75, 65, 58, 52],
+      borderColor: C.brand,
+      backgroundColor: C.brand,
+      borderWidth: 2,
+      tension: 0.4,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: C.brand,
+      pointBorderColor: C.s1,
+      pointBorderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: tickStyle() },
+      y: { grid: gridStyle(), ticks: tickStyle() }
+    }
+  }
+});
+
+// 2-3 Area Chart
+charts.lineArea = new Chart(document.getElementById('lineArea'), {
+  type: 'line',
+  data: {
+    labels: MONTHS,
+    datasets: [{
+      label: '미해결 취약점',
+      data: [52, 48, 55, 45, 38, 30],
+      borderColor: C.acc,
+      backgroundColor: 'rgba(59,143,255,.12)',
+      borderWidth: 2,
+      tension: 0.35,
+      fill: true,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      pointBackgroundColor: C.acc,
+      pointBorderColor: C.s1,
+      pointBorderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: tickStyle() },
+      y: { grid: gridStyle(), ticks: tickStyle(), beginAtZero: true }
+    }
+  }
+});
+
+// 2-4 Multi Line
+charts.lineMulti = new Chart(document.getElementById('lineMulti'), {
+  type: 'line',
+  data: {
+    labels: MONTHS,
+    datasets: [
+      { label: 'Critical', data: [12,15,8,10,7,5], borderColor: C.crit, backgroundColor: C.crit, borderWidth: 2, tension: 0.3, pointRadius: 3, pointBorderColor: C.s1, pointBorderWidth: 2 },
+      { label: 'High', data: [20,18,25,22,15,12], borderColor: C.high, backgroundColor: C.high, borderWidth: 2, tension: 0.3, pointRadius: 3, pointBorderColor: C.s1, pointBorderWidth: 2 },
+      { label: 'Medium', data: [35,30,28,32,25,20], borderColor: C.med, backgroundColor: C.med, borderWidth: 2, tension: 0.3, pointRadius: 3, pointBorderColor: C.s1, pointBorderWidth: 2 },
+      { label: 'Low', data: [15,20,18,12,22,28], borderColor: C.low, backgroundColor: C.low, borderWidth: 2, tension: 0.3, pointRadius: 3, pointBorderColor: C.s1, pointBorderWidth: 2 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: legendStyle() },
+    scales: {
+      x: { grid: { display: false }, ticks: tickStyle() },
+      y: { grid: gridStyle(), ticks: tickStyle() }
+    }
+  }
+});
+
+// ════════════════════════════════════════════════
+// 3. DOUGHNUT / PIE
+// ════════════════════════════════════════════════
+
+const sevData = [12, 28, 45, 15];
+const sevLabels = ['Critical', 'High', 'Medium', 'Low'];
+const sevColors = [C.crit, C.high, C.med, C.low];
+
+// 3-1 Doughnut
+charts.doughnut = new Chart(document.getElementById('doughnut'), {
+  type: 'doughnut',
+  data: {
+    labels: sevLabels,
+    datasets: [{ data: sevData, backgroundColor: sevColors, borderColor: C.s1, borderWidth: 2, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true,
+    cutout: '68%',
+    plugins: {
+      tooltip: tooltipStyle(),
+      legend: { ...legendStyle(), position: 'bottom' }
+    }
+  }
+});
+
+// 3-2 Pie
+charts.pie = new Chart(document.getElementById('pie'), {
+  type: 'pie',
+  data: {
+    labels: ['Linux','Windows','Network','Container'],
+    datasets: [{ data: [40, 25, 20, 15], backgroundColor: [C.acc, C.high, C.med, C.low], borderColor: C.s1, borderWidth: 2, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      tooltip: tooltipStyle(),
+      legend: { ...legendStyle(), position: 'bottom' }
+    }
+  }
+});
+
+// 3-3 Half Doughnut (Gauge)
+charts.gauge = new Chart(document.getElementById('gauge'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Score', ''],
+    datasets: [{
+      data: [72, 28],
+      backgroundColor: [C.acc, C.bd],
+      borderWidth: 0,
+      circumference: 180,
+      rotation: 270,
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '75%',
+    plugins: {
+      tooltip: { enabled: false },
+      legend: { display: false },
+    }
+  },
+  plugins: [{
+    id: 'gaugeText',
+    afterDraw(chart) {
+      const { ctx, chartArea } = chart;
+      const cx = (chartArea.left + chartArea.right) / 2;
+      const cy = chartArea.bottom - 20;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = "700 28px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = getThemeColors().txt;
+      ctx.fillText('72', cx, cy);
+      ctx.font = "11px 'IBM Plex Sans', sans-serif";
+      ctx.fillStyle = getThemeColors().txt3;
+      ctx.fillText('Risk Score', cx, cy + 18);
+      ctx.restore();
+    }
+  }]
+});
+
+// ════════════════════════════════════════════════
+// 4. RADAR / POLAR
+// ════════════════════════════════════════════════
+
+// 4-1 Radar
+charts.radar = new Chart(document.getElementById('radar'), {
+  type: 'radar',
+  data: {
+    labels: ['패치 관리','접근 제어','암호화','로깅','네트워크','인증'],
+    datasets: [
+      {
+        label: '현재',
+        data: [65, 80, 70, 55, 75, 85],
+        borderColor: C.acc,
+        backgroundColor: 'rgba(59,143,255,.12)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: C.acc,
+        pointBorderColor: C.s1,
+        pointBorderWidth: 2,
+      },
+      {
+        label: '목표',
+        data: [90, 90, 85, 80, 90, 95],
+        borderColor: C.low,
+        backgroundColor: 'rgba(0,220,126,.08)',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        pointRadius: 3,
+        pointBackgroundColor: C.low,
+        pointBorderColor: C.s1,
+        pointBorderWidth: 2,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: legendStyle() },
+    scales: {
+      r: {
+        beginAtZero: true,
+        max: 100,
+        ticks: { ...tickStyle(), stepSize: 25, backdropColor: 'transparent' },
+        grid: { color: C.bd },
+        angleLines: { color: C.bd },
+        pointLabels: { color: C.txt2, font: { size: 11 } }
+      }
+    }
+  }
+});
+
+// 4-2 Polar Area
+charts.polar = new Chart(document.getElementById('polar'), {
+  type: 'polarArea',
+  data: {
+    labels: sevLabels,
+    datasets: [{
+      data: sevData,
+      backgroundColor: [
+        'rgba(255,56,88,.5)',
+        'rgba(255,162,30,.5)',
+        'rgba(24,176,255,.5)',
+        'rgba(0,220,126,.5)',
+      ],
+      borderColor: sevColors,
+      borderWidth: 1,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: { ...legendStyle(), position: 'bottom' } },
+    scales: {
+      r: {
+        ticks: { ...tickStyle(), backdropColor: 'transparent' },
+        grid: { color: C.bd },
+      }
+    }
+  }
+});
+
+// ════════════════════════════════════════════════
+// 5. SCATTER / BUBBLE
+// ════════════════════════════════════════════════
+
+function randPoints(n, xMax, yMax) {
+  return Array.from({length: n}, () => ({ x: +(Math.random() * xMax).toFixed(1), y: +(Math.random() * yMax).toFixed(1) }));
+}
+
+// 5-1 Scatter
+charts.scatter = new Chart(document.getElementById('scatter'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      { label: 'Critical', data: randPoints(8, 10, 1), backgroundColor: C.crit, pointRadius: 5 },
+      { label: 'High', data: randPoints(12, 10, 1), backgroundColor: C.high, pointRadius: 5 },
+      { label: 'Medium', data: randPoints(15, 10, 1), backgroundColor: C.med, pointRadius: 5 },
+      { label: 'Low', data: randPoints(10, 10, 1), backgroundColor: C.low, pointRadius: 5 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: legendStyle() },
+    scales: {
+      x: { title: { display: true, text: 'CVSS Score', color: C.txt3, font: { size: 10 } }, grid: gridStyle(), ticks: tickStyle(), min: 0, max: 10 },
+      y: { title: { display: true, text: 'EPSS Score', color: C.txt3, font: { size: 10 } }, grid: gridStyle(), ticks: tickStyle(), min: 0, max: 1 }
+    }
+  }
+});
+
+// 5-2 Bubble
+function randBubbles(n, xMax, yMax, rMax) {
+  return Array.from({length: n}, () => ({
+    x: +(Math.random() * xMax).toFixed(1),
+    y: +(Math.random() * yMax).toFixed(1),
+    r: Math.floor(Math.random() * rMax) + 4,
+  }));
+}
+
+charts.bubble = new Chart(document.getElementById('bubble'), {
+  type: 'bubble',
+  data: {
+    datasets: [
+      { label: 'Critical', data: randBubbles(5, 10, 100, 15), backgroundColor: 'rgba(255,56,88,.45)', borderColor: C.crit, borderWidth: 1 },
+      { label: 'High', data: randBubbles(6, 10, 100, 12), backgroundColor: 'rgba(255,162,30,.45)', borderColor: C.high, borderWidth: 1 },
+      { label: 'Medium', data: randBubbles(8, 10, 100, 10), backgroundColor: 'rgba(24,176,255,.45)', borderColor: C.med, borderWidth: 1 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: legendStyle() },
+    scales: {
+      x: { title: { display: true, text: 'CVSS Score', color: C.txt3, font: { size: 10 } }, grid: gridStyle(), ticks: tickStyle(), min: 0, max: 10 },
+      y: { title: { display: true, text: '영향 자산 수', color: C.txt3, font: { size: 10 } }, grid: gridStyle(), ticks: tickStyle(), min: 0, max: 100 }
+    }
+  }
+});
+
+// ════════════════════════════════════════════════
+// 6. MIXED CHART
+// ════════════════════════════════════════════════
+
+charts.mixed = new Chart(document.getElementById('mixed'), {
+  type: 'bar',
+  data: {
+    labels: MONTHS,
+    datasets: [
+      {
+        type: 'bar',
+        label: '신규 취약점',
+        data: [40, 35, 50, 42, 30, 25],
+        backgroundColor: 'rgba(59,143,255,.35)',
+        borderColor: C.acc,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+        barPercentage: 0.5,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'bar',
+        label: '해결 완료',
+        data: [30, 28, 45, 38, 35, 32],
+        backgroundColor: 'rgba(0,220,126,.35)',
+        borderColor: C.low,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+        barPercentage: 0.5,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: '해결률 (%)',
+        data: [75, 80, 90, 90, 100, 100],
+        borderColor: C.brand,
+        backgroundColor: C.brand,
+        borderWidth: 2,
+        tension: 0.35,
+        pointRadius: 4,
+        pointBackgroundColor: C.brand,
+        pointBorderColor: C.s1,
+        pointBorderWidth: 2,
+        yAxisID: 'y1',
+        order: 1,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: tooltipStyle(), legend: legendStyle() },
+    scales: {
+      x: { grid: { display: false }, ticks: tickStyle() },
+      y: {
+        position: 'left',
+        title: { display: true, text: '건수', color: C.txt3, font: { size: 10 } },
+        grid: gridStyle(),
+        ticks: tickStyle(),
+        beginAtZero: true,
+      },
+      y1: {
+        position: 'right',
+        title: { display: true, text: '해결률 (%)', color: C.txt3, font: { size: 10 } },
+        grid: { display: false },
+        ticks: { ...tickStyle(), callback: v => v + '%' },
+        min: 0,
+        max: 120,
+      }
+    }
+  }
+});
+
+// ════════════════════════════════════════════════
+// THEME UPDATE
+// ════════════════════════════════════════════════
+
+function updateChartsTheme() {
+  const c = getThemeColors();
+  Chart.defaults.color = c.txt3;
+  Chart.defaults.borderColor = c.bd;
+
+  Object.values(charts).forEach(chart => {
+    // Update scales
+    if (chart.options.scales) {
+      Object.values(chart.options.scales).forEach(scale => {
+        if (scale.grid) scale.grid.color = c.bd;
+        if (scale.ticks) scale.ticks.color = c.txt3;
+        if (scale.angleLines) scale.angleLines.color = c.bd;
+        if (scale.pointLabels) scale.pointLabels.color = c.txt2;
+        if (scale.title) scale.title.color = c.txt3;
+      });
+    }
+    // Update tooltip
+    if (chart.options.plugins?.tooltip) {
+      Object.assign(chart.options.plugins.tooltip, {
+        backgroundColor: c.s1,
+        titleColor: c.txt,
+        bodyColor: c.txt2,
+        borderColor: c.bd,
+      });
+    }
+    // Update legend label color
+    if (chart.options.plugins?.legend?.labels) {
+      chart.options.plugins.legend.labels.color = c.txt2;
+    }
+
+    // Update doughnut/pie borders
+    chart.data.datasets.forEach(ds => {
+      if (ds.borderColor === C.s1 || ds.borderColor === c.s1) {
+        ds.borderColor = c.s1;
+      }
+      if (ds.pointBorderColor === C.s1 || ds.pointBorderColor === c.s1) {
+        ds.pointBorderColor = c.s1;
+      }
+    });
+
+    chart.update('none');
+  });
+}
+</script>
+</body>
+</html>
