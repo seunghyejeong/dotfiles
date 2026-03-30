@@ -9,7 +9,25 @@ echo "   소스: $CLAUDE_SRC"
 echo "   대상: $CLAUDE_DST"
 echo ""
 
-link_files() {
+link_item() {
+  local src="$1"
+  local dst="$2"
+  local label="$3"
+
+  if [ -L "$dst" ]; then
+    echo "  이미 연결됨: $label"
+  elif [ -e "$dst" ]; then
+    echo "  백업: $label → $label.bak"
+    mv "$dst" "$dst.bak"
+    ln -s "$src" "$dst"
+    echo "  ✅ 연결: $label"
+  else
+    ln -s "$src" "$dst"
+    echo "  ✅ 연결: $label"
+  fi
+}
+
+link_dir() {
   local src_dir="$1"
   local dst_dir="$2"
   local label="$3"
@@ -24,44 +42,19 @@ link_files() {
   for src in "$src_dir"/*/; do
     [ -d "$src" ] || continue
     name=$(basename "$src")
-    dst="$dst_dir/$name"
-
-    if [ -L "$dst" ]; then
-      echo "  이미 연결됨: $label/$name"
-    elif [ -e "$dst" ]; then
-      echo "  백업: $label/$name → $name.bak"
-      mv "$dst" "$dst.bak"
-      ln -s "$src" "$dst"
-      echo "  ✅ 연결: $label/$name"
-    else
-      ln -s "$src" "$dst"
-      echo "  ✅ 연결: $label/$name"
-    fi
+    link_item "$src" "$dst_dir/$name" "$label/$name"
   done
 
-  # 폴더 안 파일도 처리 (hooks 같은 경우)
-  for src in "$src_dir"/*.sh "$src_dir"/*.md "$src_dir"/*.json 2>/dev/null; do
+  for src in "$src_dir"/*; do
     [ -f "$src" ] || continue
     name=$(basename "$src")
-    dst="$dst_dir/$name"
-
-    if [ -L "$dst" ]; then
-      echo "  이미 연결됨: $label/$name"
-    elif [ -e "$dst" ]; then
-      echo "  백업: $label/$name → $name.bak"
-      mv "$dst" "$dst.bak"
-      ln -s "$src" "$dst"
-      echo "  ✅ 연결: $label/$name"
-    else
-      ln -s "$src" "$dst"
-      echo "  ✅ 연결: $label/$name"
-    fi
+    link_item "$src" "$dst_dir/$name" "$label/$name"
   done
 }
 
-link_files "$CLAUDE_SRC/agents" "$CLAUDE_DST/agents" "agents"
-link_files "$CLAUDE_SRC/skills" "$CLAUDE_DST/skills" "skills"
-link_files "$CLAUDE_SRC/hooks"  "$CLAUDE_DST/hooks"  "hooks"
+link_dir "$CLAUDE_SRC/agents" "$CLAUDE_DST/agents" "agents"
+link_dir "$CLAUDE_SRC/skills" "$CLAUDE_DST/skills" "skills"
+link_dir "$CLAUDE_SRC/hooks"  "$CLAUDE_DST/hooks"  "hooks"
 
 echo ""
-echo "✅ 설치 완료! Claude Code 재시작 후 /agents 로 확인하세요."  
+echo "✅ 설치 완료! Claude Code 재시작 후 /agents 로 확인하세요."
