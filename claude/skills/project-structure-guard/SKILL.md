@@ -243,6 +243,19 @@ project/
 진행할까요?
 ```
 
+RULE-07: asyncio 경계 규칙
+- CPU-bound 작업은 반드시 run_in_executor
+- 스레드에서 이벤트루프 직접 호출 금지
+- blocking I/O를 async 함수 안에서 직접 호출 금지
+
+RULE-08: 상태 격리 규칙  
+- 인메모리 상태(Dict, Queue)가 있으면 workers=1 명시
+- 전역 싱글톤은 lifespan에서만 초기화
+
+RULE-09: 외부 프로세스 규칙
+- subprocess/Playwright는 반드시 timeout + 명시적 kill
+- .so 빌드 대상에서 subprocess 생성 모듈 제외
+
 ---
 
 자세한 스택별 레퍼런스는 `references/` 디렉토리를 참조:
