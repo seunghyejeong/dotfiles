@@ -52,9 +52,13 @@ link_dir() {
   done
 }
 
+mkdir -p "$CLAUDE_DST"
 link_dir "$CLAUDE_SRC/agents" "$CLAUDE_DST/agents" "agents"
 link_dir "$CLAUDE_SRC/skills" "$CLAUDE_DST/skills" "skills"
 link_dir "$CLAUDE_SRC/hooks"  "$CLAUDE_DST/hooks"  "hooks"
+
+# settings.json (hook 등록 포함) — 머신별 커스텀이 필요하면 백업 후 재링크됨
+link_item "$DOTFILES_DIR/settings.json" "$CLAUDE_DST/settings.json" "settings.json"
 
 echo ""
 echo "✅ 설치 완료! Claude Code 재시작 후 /agents 로 확인하세요."
